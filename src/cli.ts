@@ -1,4 +1,5 @@
 import { buildLadder, normalizeCatalog, type OpenRouterModel } from "./frontier.js";
+import { writeReports } from "./report.js";
 
 export interface CliOptions {
   inputTokens: number;
@@ -7,6 +8,7 @@ export interface CliOptions {
   excludePreview: boolean;
   allowedProviders: Set<string>;
   requireTools: boolean;
+  outputDirectory?: string;
 }
 
 const usage = `Usage: npm run start -- [options]
@@ -20,6 +22,7 @@ Options:
   --exclude-preview        Exclude preview models
   --allow-provider <list>  Comma-separated provider IDs, e.g. openai,anthropic
   --require-tools          Require OpenRouter tools support
+  --output-dir <path>      Write report.json and report.html alongside stdout JSON
   --help                   Print this message
 `;
 
@@ -56,6 +59,11 @@ export function parseArgs(args: string[]): CliOptions {
         index += 1;
         break;
       case "--require-tools": options.requireTools = true; break;
+      case "--output-dir":
+        if (!value) throw new Error(`${arg} requires a path`);
+        options.outputDirectory = value;
+        index += 1;
+        break;
       case "--help": console.log(usage); process.exit(0); break;
       default: throw new Error(`Unknown option: ${arg}`);
     }
@@ -82,7 +90,7 @@ export async function main(args: string[]): Promise<void> {
   const catalog = await fetchCatalog();
   const candidates = normalizeCatalog(catalog, options);
   const models = buildLadder(candidates, options.limit);
-  console.log(JSON.stringify({
+  const report = {
     generatedAt: new Date().toISOString(),
     source: "https://openrouter.ai/api/v1/models",
     authConfigured: Boolean(process.env.OPENROUTER_API_KEY),
@@ -95,7 +103,9 @@ export async function main(args: string[]): Promise<void> {
     eligibleModelCount: candidates.length,
     paretoOptimalModelCount: paretoCount(candidates),
     models,
-  }, null, 2));
+  };
+  if (options.outputDirectory) await writeReports(report, options.outputDirectory);
+  console.log(JSON.stringify(report, null, 2));
 }
 
 function paretoCount(candidates: ReturnType<typeof normalizeCatalog>): number {
