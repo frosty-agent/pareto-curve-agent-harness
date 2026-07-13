@@ -31,16 +31,14 @@ docker run --rm pareto-curve-agent-harness \
 
 To pass the OpenRouter key from AWS Secrets Manager without storing it in the image or repository:
 
-```bash
-export OPENROUTER_API_KEY="$(aws secretsmanager get-secret-value \
-  --region us-east-1 \
-  --secret-id arn:aws:secretsmanager:us-east-1:417007888903:secret:pareto-curve-openrouter-api-key-pVzq38 \
-  --query SecretString --output text)"
+Retrieve `SecretString` from AWS Secrets Manager for `pareto-curve-openrouter-api-key`, export it into `OPENROUTER_API_KEY` in your shell, then run:
 
+```bash
 docker run --rm -e OPENROUTER_API_KEY pareto-curve-agent-harness \
   --input-tokens 10000 --output-tokens 2000 --limit 10 --exclude-preview
-unset OPENROUTER_API_KEY
 ```
+
+Unset `OPENROUTER_API_KEY` after the run.
 
 The key is optional for the catalog endpoint. When supplied, the CLI sends it only as an OpenRouter authorization header and reports `authConfigured: true`; it never prints the key.
 
@@ -55,6 +53,29 @@ docker run --rm pareto-curve-agent-harness \
 ```
 
 Models must have an AA Coding Index to be eligible. The program removes dominated models—models for which another eligible model is at least as capable and no more expensive—then orders the frontier from lower to higher Coding Index. If the strict frontier has fewer than `--limit` models, dominated models are appended and marked `isParetoOptimal: false`.
+
+## Pareto task ladder primitive
+
+`ParetoTaskLadder` owns deterministic worker escalation; callers provide provider-specific `TaskWorker` and `TaskJudge` adapters. It always chooses the first supplied ladder model for the worker and the model with the highest `intelligenceIndex` for judgment. A worker-reported success is still judged.
+
+`DockerGitWorkspace` isolates task work from the repository that invoked it, while `DockerCommandWorker` executes every coding worker attempt in a separately constrained Docker container. The judge remains an adapter supplied by the caller.
+
+`DockerGitWorkspace`:
+
+1. It reads and records the source repository `HEAD` SHA.
+2. It asks a disposable Docker container running as the invoking host UID/GID to clone that exact SHA into a host-temporary mounted directory. The clone is already an initialized Git repository.
+3. After an unsuccessful judgment, it writes `attempt-N.patch` to a sibling temporary artifacts directory, hard-resets to the recorded baseline commit, and cleans untracked/ignored files before the next model runs.
+4. Cleanup deletes the temporary workspace at the end of a run. The original working tree is read-only to the sandbox and is never reset or modified.
+
+`DockerCommandWorker` mounts only that isolated workspace, drops Linux capabilities, enables `no-new-privileges`, limits process count, makes the container filesystem read-only apart from an in-memory `/tmp`, and disables network access by default. Set its `network` option to `bridge` explicitly only for a worker that needs an API connection. Its command receives JSON task context in `PARETO_TASK_CONTEXT` and must write one JSON `WorkerResult` object to stdout.
+
+Build the sandbox image before constructing a `DockerGitWorkspace`:
+
+```bash
+docker build -f Dockerfile.task-sandbox -t pareto-task-sandbox:latest .
+```
+
+A task runner must arrange for its worker to execute inside the workspace identified by `WorkspaceInfo.workingDirectory`; this package deliberately does not embed a coding-provider API or task sandbox command.
 
 ## Development
 
