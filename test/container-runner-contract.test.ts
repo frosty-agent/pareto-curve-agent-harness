@@ -21,6 +21,8 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(dockerfile, /checkout --quiet 6933905657de3349ad34d88737f09807dbc4b75e/);
   assert.match(dockerfile, /RUN npm ci && npm run build/);
   assert.match(dockerfile, /COPY --from=open-agent-sdk \/opt\/open-agent-sdk \/opt\/open-agent-sdk/);
+  assert.match(dockerfile, /mkdir \/workspace/);
+  assert.match(dockerfile, /chown -R node:node \/app \/opt\/open-agent-sdk \/workspace/);
   assert.match(dockerfile, /COPY src \.\/src/);
   assert.match(dockerfile, /COPY open-agent-worker\.mjs \.\/open-agent-worker\.mjs/);
   assert.match(dockerfile, /ENTRYPOINT \["node", "--import", "tsx", "src\/container-run\.ts"\]/);
