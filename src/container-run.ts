@@ -38,7 +38,7 @@ class ContainerWorkspace implements AttemptWorkspace {
 
 class InContainerOpenRouterWorker implements TaskWorker {
   async run(context: WorkerContext): Promise<WorkerResult> {
-    const { stdout } = await execFile("node", ["/app/openrouter-worker.mjs"], { env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) }, timeout: 90_000, maxBuffer: 10 * 1024 * 1024 });
+    const { stdout } = await execFile("node", ["/app/open-agent-worker.mjs"], { env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) }, timeout: 90_000, maxBuffer: 10 * 1024 * 1024 });
     return JSON.parse(stdout) as WorkerResult;
   }
 }
