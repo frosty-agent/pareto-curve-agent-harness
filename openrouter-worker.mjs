@@ -12,14 +12,21 @@ try {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "Pareto Curve Agent Harness" },
     body: JSON.stringify({ model: context.model.id, temperature: 0, messages: [{ role: "user", content: prompt }] }),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`OpenRouter worker request failed: ${response.status} ${await response.text()}`);
   const payload = await response.json();
   const diff = payload.choices?.[0]?.message?.content;
+  const usage = payload.usage ?? {};
   if (!diff || typeof diff !== "string") throw new Error("OpenRouter worker did not return a diff");
   writeFileSync("/tmp/attempt.patch", diff);
-  execFileSync("git", ["apply", "--whitespace=fix", "/tmp/attempt.patch"], { cwd: "/workspace", stdio: "pipe" });
+  try {
+    execFileSync("git", ["apply", "--whitespace=fix", "/tmp/attempt.patch"], { cwd: "/workspace", stdio: "pipe" });
+  } catch (error) {
+    process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), usage: { inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens, costUsd: usage.cost } }));
+    process.exit(0);
+  }
   let checks = "";
   try { checks = execFileSync("npm", ["test"], { cwd: "/workspace", encoding: "utf8", timeout: 120000 }); } catch (error) { checks = `${error.stdout ?? ""}\n${error.stderr ?? error.message}`; }
-  process.stdout.write(JSON.stringify({ status: "completed", output: `Applied model diff. npm test output:\n${checks}\nDiff:\n${diff}` }));
+  process.stdout.write(JSON.stringify({ status: "completed", output: `Applied model diff. npm test output:\n${checks}\nDiff:\n${diff}`, usage: { inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens, costUsd: usage.cost } }));
 } catch (error) { fail(error instanceof Error ? error.message : String(error)); }

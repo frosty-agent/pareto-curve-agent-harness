@@ -30,7 +30,7 @@ async function main(): Promise<void> {
 
   const catalog = await fetchCatalog();
   const candidates = normalizeCatalog(catalog, { inputTokens: 12_000, outputTokens: 4_000, excludePreview: true });
-  const availableModels = buildLadder(candidates, 4);
+  const availableModels = buildLadder(candidates, 10);
   const ladder: LadderModel[] = availableModels.map(({ id, codingIndex, intelligenceIndex }) => ({ id, codingIndex, intelligenceIndex }));
   const workspace = new DockerGitWorkspace({ sourceDirectory });
   const worker = new DockerCommandWorker({
@@ -49,6 +49,7 @@ async function main(): Promise<void> {
       attemptNumber: attempt.attemptNumber,
       model: attempt.model,
       workerStatus: attempt.workerResult?.status ?? "not-invoked",
+      usage: attempt.workerResult?.usage,
       workerOutput: attempt.workerResult?.output ?? "",
       judge: attempt.judgeResult,
       success: attempt.judgeResult?.successful ?? false,

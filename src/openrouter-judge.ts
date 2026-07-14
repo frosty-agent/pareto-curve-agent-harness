@@ -18,7 +18,7 @@ export class OpenRouterJudge implements TaskJudge {
           { role: "user", content: JSON.stringify({ task: context.task, attempt: context.attempt, workspace: { sourceCommit: context.workspace.sourceCommit, baselineCommit: context.workspace.baselineCommit } }) },
         ],
       }),
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error(`OpenRouter judge request failed: ${response.status} ${await response.text()}`);
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
