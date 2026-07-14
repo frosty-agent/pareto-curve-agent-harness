@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REPORT_SCHEMA_VERSION, renderHtml, type TraceReport } from "../src/report.js";
+import { REPORT_SCHEMA_VERSION, redactReportSecrets, renderHtml, type TraceReport } from "../src/report.js";
 
 test("renders a mobile-safe, escaped agent trace containing tool, hook, and MCP events", () => {
   const trace: TraceReport = {
@@ -28,4 +28,9 @@ test("renders a mobile-safe, escaped agent trace containing tool, hook, and MCP 
   assert.match(html, /Worker &lt;one&gt;/);
   assert.doesNotMatch(html, /echo <unsafe>/);
   assert.match(html, /echo &lt;unsafe&gt;/);
+});
+
+test("redacts credential fields and bearer-style values before report persistence", () => {
+  const redacted = redactReportSecrets({ apiKey: "sk-or-should-not-appear", nested: { authorization: "Bearer private-token" }, output: "used sk-ant-example" });
+  assert.deepEqual(redacted, { apiKey: "[REDACTED]", nested: { authorization: "[REDACTED]" }, output: "used [REDACTED]" });
 });

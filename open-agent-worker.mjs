@@ -5,6 +5,16 @@ import { Agent } from "/opt/open-agent-sdk/dist/index.js";
 
 const workspace = "/workspace";
 const maxTurns = 12;
+const startedAt = new Date().toISOString();
+const events = [];
+let sequence = 0;
+
+function emit(event) {
+  events.push({ eventId: `worker-${++sequence}`, sequence, timestamp: new Date().toISOString(), ...event });
+  return `worker-${sequence}`;
+}
+
+function trace() { return { startedAt, endedAt: new Date().toISOString(), events }; }
 
 function safePath(path) {
   const target = resolve(workspace, path);
@@ -16,39 +26,46 @@ function result(content, isError = false) {
   return { type: "tool_result", tool_use_id: "", content, ...(isError ? { is_error: true } : {}) };
 }
 
-const workspaceTools = [
-  {
-    name: "read_file",
-    description: "Read a UTF-8 file below /workspace.",
-    inputSchema: { type: "object", properties: { path: { type: "string" } }, required: ["path"] },
-    isReadOnly: () => true,
-    async call(input) { return result(readFileSync(safePath(input.path), "utf8")); },
-  },
-  {
-    name: "list_files",
-    description: "List files below /workspace.",
-    inputSchema: { type: "object", properties: { path: { type: "string" } } },
-    isReadOnly: () => true,
-    async call(input) { return result(readdirSync(safePath(input.path ?? "."), { recursive: true }).slice(0, 300).join("\n")); },
-  },
-  {
-    name: "write_file",
-    description: "Create or replace a UTF-8 file below /workspace.",
-    inputSchema: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] },
-    async call(input) { writeFileSync(safePath(input.path), input.content, "utf8"); return result("written"); },
-  },
-  {
-    name: "run_check",
-    description: "Run exactly one allowed validation command: npm test, npm run build, git diff, or git status --short.",
-    inputSchema: { type: "object", properties: { command: { type: "string", enum: ["npm test", "npm run build", "git diff", "git status --short"] } }, required: ["command"] },
+function instrumentTool(name, inputSchema, call, isReadOnly = false) {
+  return {
+    name,
+    description: `${name.replaceAll("_", " ")} below /workspace.`,
+    inputSchema,
+    ...(isReadOnly ? { isReadOnly: () => true } : {}),
     async call(input) {
-      const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] };
-      const [bin, argv] = allowed[input.command] ?? [];
-      if (!bin) return result("Command is not allowlisted", true);
-      try { return result(execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 })); }
-      catch (error) { return result(`${error.stdout ?? ""}\n${error.stderr ?? error.message}`, true); }
+      const hookId = `hook-${sequence + 1}`;
+      emit({ type: "hook.started", hookId, hookName: "workspace-tool-audit", phase: "pre", status: "started", input: { toolName: name } });
+      const toolCallId = `tool-${sequence + 1}`;
+      const callEventId = emit({ type: "tool.call", toolCallId, toolName: name, status: "started", input });
+      const toolStartedAt = Date.now();
+      try {
+        const output = await call(input);
+        const status = output.is_error ? "failed" : "succeeded";
+        emit({ type: "tool.result", parentEventId: callEventId, toolCallId, toolName: name, status, output: { content: output.content }, durationMs: Date.now() - toolStartedAt });
+        emit({ type: "hook.completed", hookId, hookName: "workspace-tool-audit", phase: "post", status, output: { toolName: name }, durationMs: Date.now() - toolStartedAt });
+        return output;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const errorRecord = { name: error instanceof Error ? error.name : "Error", message };
+        emit({ type: "tool.result", parentEventId: callEventId, toolCallId, toolName: name, status: "failed", output: { content: message }, error: errorRecord, durationMs: Date.now() - toolStartedAt });
+        emit({ type: "hook.completed", hookId, hookName: "workspace-tool-audit", phase: "error", status: "failed", error: errorRecord, durationMs: Date.now() - toolStartedAt });
+        return result(message, true);
+      }
     },
-  },
+  };
+}
+
+const workspaceTools = [
+  instrumentTool("read_file", { type: "object", properties: { path: { type: "string" } }, required: ["path"] }, (input) => result(readFileSync(safePath(input.path), "utf8")), true),
+  instrumentTool("list_files", { type: "object", properties: { path: { type: "string" } } }, (input) => result(readdirSync(safePath(input.path ?? "."), { recursive: true }).slice(0, 300).join("\n")), true),
+  instrumentTool("write_file", { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] }, (input) => { writeFileSync(safePath(input.path), input.content, "utf8"); return result("written"); }),
+  instrumentTool("run_check", { type: "object", properties: { command: { type: "string", enum: ["npm test", "npm run build", "git diff", "git status --short"] } }, required: ["command"] }, (input) => {
+    const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] };
+    const [bin, argv] = allowed[input.command] ?? [];
+    if (!bin) return result("Command is not allowlisted", true);
+    try { return result(execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 })); }
+    catch (error) { return result(`${error.stdout ?? ""}\n${error.stderr ?? error.message}`, true); }
+  }),
 ];
 
 try {
@@ -65,12 +82,15 @@ try {
     permissionMode: "bypassPermissions",
     systemPrompt: "You are a coding agent working only through the supplied tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary.",
   });
+  emit({ type: "agent.message", role: "user", content: context.task.prompt });
   const response = await agent.prompt(`${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}`);
+  emit({ type: "agent.message", role: "assistant", content: response.text || "completed" });
   process.stdout.write(JSON.stringify({
     status: "completed",
     output: response.text || "completed",
     usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
+    trace: trace(),
   }));
 } catch (error) {
-  process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error) }));
+  process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), trace: trace() }));
 }

@@ -1,3 +1,5 @@
+import type { AgentReportEvent } from "./report.js";
+
 export interface LadderModel {
   id: string;
   codingIndex: number;
@@ -31,6 +33,8 @@ export interface WorkerResult {
   status: "completed" | "failed";
   output: string;
   usage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
+  /** Runtime events emitted by the worker, already safe to include in a report. */
+  trace?: { startedAt: string; endedAt: string; events: AgentReportEvent[] };
 }
 
 export interface JudgeResult {
@@ -55,6 +59,7 @@ export interface PreviousAttempt {
 }
 
 export interface WorkerContext {
+  attemptNumber: number;
   task: CodingTask;
   model: LadderModel;
   workspace: WorkspaceInfo;
@@ -132,7 +137,7 @@ export class ParetoTaskLadder {
         const prior = index === 0 ? undefined : asPreviousAttempt(attempts[index - 1]!);
 
         try {
-          attempt.workerResult = await this.worker.run({ task, model, workspace, previousAttempt: prior });
+          attempt.workerResult = await this.worker.run({ attemptNumber: attempt.attemptNumber, task, model, workspace, previousAttempt: prior });
         } catch (error) {
           attempt.error = errorMessage(error);
           return { outcome: "execution_error", judgeModel, workspace, attempts, error: attempt.error };

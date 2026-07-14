@@ -75,12 +75,28 @@ export interface TraceReport {
   agentSessions: AgentSessionReport[];
 }
 
+const secretKeyPattern = /(?:api[_-]?key|authorization|token|password|secret|cookie)/i;
+const bearerPattern = /\b(?:Bearer\s+|sk-(?:or|ant|proj)-)[A-Za-z0-9._-]+/gi;
+
+/** Return a JSON-safe copy that cannot persist common credential fields or tokens. */
+export function redactReportSecrets(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactReportSecrets);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+      key,
+      secretKeyPattern.test(key) ? "[REDACTED]" : redactReportSecrets(entry),
+    ]));
+  }
+  return typeof value === "string" ? value.replace(bearerPattern, "[REDACTED]") : value;
+}
+
 export async function writeReports(report: unknown, outputDirectory: string): Promise<ReportPaths> {
+  const redacted = redactReportSecrets(report);
   await mkdir(outputDirectory, { recursive: true });
   const json = join(outputDirectory, "report.json");
   const html = join(outputDirectory, "report.html");
-  await writeFile(json, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  await writeFile(html, renderHtml(report), "utf8");
+  await writeFile(json, `${JSON.stringify(redacted, null, 2)}\n`, "utf8");
+  await writeFile(html, renderHtml(redacted), "utf8");
   return { json, html };
 }
 
