@@ -38,14 +38,11 @@ const workspaceTools = [
     async call(input) { writeFileSync(safePath(input.path), input.content, "utf8"); return result("written"); },
   },
   {
-    name: "run_check",
-    description: "Run exactly one allowed validation command: npm test, npm run build, git diff, or git status --short.",
-    inputSchema: { type: "object", properties: { command: { type: "string", enum: ["npm test", "npm run build", "git diff", "git status --short"] } }, required: ["command"] },
+    name: "bash",
+    description: "Run a shell command in /workspace. The workspace is an isolated writable clone; inspect, edit, and validate it as needed.",
+    inputSchema: { type: "object", properties: { command: { type: "string" } }, required: ["command"] },
     async call(input) {
-      const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] };
-      const [bin, argv] = allowed[input.command] ?? [];
-      if (!bin) return result("Command is not allowlisted", true);
-      try { return result(execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 })); }
+      try { return result(execFileSync("sh", ["-lc", input.command], { cwd: workspace, encoding: "utf8", timeout: 120000, maxBuffer: 10 * 1024 * 1024 })); }
       catch (error) { return result(`${error.stdout ?? ""}\n${error.stderr ?? error.message}`, true); }
     },
   },
@@ -55,6 +52,10 @@ try {
   const context = JSON.parse(process.env.PARETO_TASK_CONTEXT ?? "");
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY missing");
+  const abortController = new AbortController();
+  const cancel = () => abortController.abort();
+  process.once("SIGTERM", cancel);
+  process.once("SIGINT", cancel);
   const agent = new Agent({
     apiType: "openrouter",
     apiKey,
@@ -63,9 +64,12 @@ try {
     tools: workspaceTools,
     maxTurns,
     permissionMode: "bypassPermissions",
+    abortController,
     systemPrompt: "You are a coding agent working only through the supplied tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary.",
   });
   const response = await agent.prompt(`${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}`);
+  process.off("SIGTERM", cancel);
+  process.off("SIGINT", cancel);
   process.stdout.write(JSON.stringify({
     status: "completed",
     output: response.text || "completed",

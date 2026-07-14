@@ -44,7 +44,11 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(worker, /tools: workspaceTools/);
   assert.match(worker, /await agent\.prompt\(/);
   assert.match(worker, /name: "write_file"/);
-  assert.match(worker, /name: "run_check"/);
+  assert.match(worker, /name: "bash"/);
+  assert.match(worker, /execFileSync\("sh", \["-lc", input\.command\]/);
+  assert.doesNotMatch(worker, /Command is not allowlisted/);
+  assert.match(worker, /process\.once\("SIGTERM", cancel\)/);
+  assert.match(worker, /abortController,/);
 
   // No Docker child worker or host-orchestrated per-model loop is permitted inside the runner.
   assert.doesNotMatch(runner, /DockerCommandWorker|DockerGitWorkspace|docker\s+run|docker\.sock/i);
