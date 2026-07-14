@@ -40,6 +40,7 @@ export interface WorkerResult {
 export interface JudgeResult {
   successful: boolean;
   learnings: string;
+  usage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
 }
 
 export interface AttemptRecord {

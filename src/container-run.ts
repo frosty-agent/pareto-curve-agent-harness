@@ -57,7 +57,13 @@ async function main() {
   const availableModels = buildLadder(normalizeCatalog(catalog, { inputTokens: 12_000, outputTokens: 4_000, excludePreview: true }), 10);
   const ladder = availableModels.map(({ id, codingIndex, intelligenceIndex }) => ({ id, codingIndex, intelligenceIndex }));
   const result = await new ParetoTaskLadder(new InContainerOpenRouterWorker(), new OpenRouterJudge(), new ContainerWorkspace()).run(task, ladder);
-  const report = { generatedAt: new Date().toISOString(), kind: "containerized-openrouter-pareto-task-run", task, availableModels, invokedModels: result.attempts.map((a) => ({ attemptNumber: a.attemptNumber, model: a.model, workerStatus: a.workerResult?.status ?? "not-invoked", usage: a.workerResult?.usage, success: a.judgeResult?.successful ?? false, error: a.error })), result, trace: traceFromLadderResult(result) };
+  const invokedModels = result.attempts.flatMap((a) => [
+    { attemptNumber: a.attemptNumber, invocationRole: "worker", model: a.model, workerStatus: a.workerResult?.status ?? "not-invoked", usage: a.workerResult?.usage, success: a.judgeResult?.successful ?? false, error: a.error },
+    ...(a.judgeResult ? [{ attemptNumber: a.attemptNumber, invocationRole: "judge", model: result.judgeModel, workerStatus: "completed", usage: a.judgeResult.usage, success: a.judgeResult.successful }] : []),
+  ]);
+  const costs = invokedModels.map((invocation) => invocation.usage?.costUsd);
+  const totalCostUsd = costs.every((cost) => typeof cost === "number") ? costs.reduce((total, cost) => total + (cost ?? 0), 0) : null;
+  const report = { generatedAt: new Date().toISOString(), kind: "containerized-openrouter-pareto-task-run", task, availableModels, invokedModels, totalCostUsd, result, trace: traceFromLadderResult(result) };
   await writeReports(report, reportsDirectory);
   console.log(JSON.stringify(report, null, 2));
 }

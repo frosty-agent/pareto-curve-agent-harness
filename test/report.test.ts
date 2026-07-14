@@ -30,6 +30,22 @@ test("renders a mobile-safe, escaped agent trace containing tool, hook, and MCP 
   assert.match(html, /echo &lt;unsafe&gt;/);
 });
 
+test("renders per-invocation and total actual cost", () => {
+  const html = renderHtml({
+    task: { id: "costed-task", prompt: "do work" },
+    invokedModels: [
+      { attemptNumber: 1, invocationRole: "worker", model: { id: "cheap" }, workerStatus: "completed", success: false, usage: { inputTokens: 10, outputTokens: 5, costUsd: 0 } },
+      { attemptNumber: 1, invocationRole: "judge", model: { id: "judge" }, workerStatus: "completed", success: false, usage: { inputTokens: 20, outputTokens: 2, costUsd: 0.012345 } },
+    ],
+    totalCostUsd: 0.012345,
+  });
+  assert.match(html, /worker/);
+  assert.match(html, /judge/);
+  assert.match(html, /\$0\.000000/);
+  assert.match(html, /\$0\.012345/);
+  assert.match(html, /Total actual cost.*\$0\.012345/);
+});
+
 test("preserves token accounting while redacting credential fields", () => {
   const redacted = redactReportSecrets({ inputTokens: 123, outputTokens: 45, apiKey: "secret" });
   assert.deepEqual(redacted, { inputTokens: 123, outputTokens: 45, apiKey: "[REDACTED]" });

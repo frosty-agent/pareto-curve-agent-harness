@@ -51,7 +51,8 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(worker, /import \{ Agent \} from "\/opt\/open-agent-sdk\/dist\/index\.js"/);
   assert.match(worker, /apiType: "openrouter"/);
   assert.match(worker, /tools: workspaceTools/);
-  assert.match(worker, /await agent\.prompt\(/);
+  assert.match(worker, /for await \(const event of agent\.query\(/);
+  assert.match(worker, /total_cost_usd/);
   assert.match(worker, /instrumentTool\("write_file"/);
   assert.match(worker, /instrumentTool\("bash"/);
   assert.match(worker, /execFileSync\("sh", \["-lc", input\.command\]/);

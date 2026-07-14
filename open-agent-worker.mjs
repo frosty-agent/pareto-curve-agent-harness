@@ -75,11 +75,17 @@ try {
     systemPrompt: "You are a coding agent working only through the supplied tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary.",
   });
   emit({ type: "agent.message", role: "user", content: context.task.prompt });
-  const response = await agent.prompt(`${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}`);
+  let output = "completed";
+  let usage;
+  let costUsd;
+  for await (const event of agent.query(`${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}`)) {
+    if (event.type === "assistant") output = event.message.content.filter((block) => block.type === "text").map((block) => block.text).join("") || output;
+    if (event.type === "result") { usage = event.usage; costUsd = event.total_cost_usd; }
+  }
   process.off("SIGTERM", cancel);
   process.off("SIGINT", cancel);
-  emit({ type: "agent.message", role: "assistant", content: response.text || "completed" });
-  process.stdout.write(JSON.stringify({ status: "completed", output: response.text || "completed", usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens }, trace: trace() }));
+  emit({ type: "agent.message", role: "assistant", content: output });
+  process.stdout.write(JSON.stringify({ status: "completed", output, usage: { inputTokens: usage?.input_tokens, outputTokens: usage?.output_tokens, ...(costUsd === undefined ? {} : { costUsd }) }, trace: trace() }));
 } catch (error) {
   process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), trace: trace() }));
 }
