@@ -13,19 +13,15 @@ function emit(event) {
   events.push({ eventId: `worker-${++sequence}`, sequence, timestamp: new Date().toISOString(), ...event });
   return `worker-${sequence}`;
 }
-
 function trace() { return { startedAt, endedAt: new Date().toISOString(), events }; }
-
 function safePath(path) {
   const target = resolve(workspace, path);
   if (relative(workspace, target).startsWith("..")) throw new Error("Path escapes workspace");
   return target;
 }
-
 function result(content, isError = false) {
   return { type: "tool_result", tool_use_id: "", content, ...(isError ? { is_error: true } : {}) };
 }
-
 function instrumentTool(name, inputSchema, call, isReadOnly = false) {
   return {
     name,
@@ -59,11 +55,8 @@ const workspaceTools = [
   instrumentTool("read_file", { type: "object", properties: { path: { type: "string" } }, required: ["path"] }, (input) => result(readFileSync(safePath(input.path), "utf8")), true),
   instrumentTool("list_files", { type: "object", properties: { path: { type: "string" } } }, (input) => result(readdirSync(safePath(input.path ?? "."), { recursive: true }).slice(0, 300).join("\n")), true),
   instrumentTool("write_file", { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] }, (input) => { writeFileSync(safePath(input.path), input.content, "utf8"); return result("written"); }),
-  instrumentTool("run_check", { type: "object", properties: { command: { type: "string", enum: ["npm test", "npm run build", "git diff", "git status --short"] } }, required: ["command"] }, (input) => {
-    const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] };
-    const [bin, argv] = allowed[input.command] ?? [];
-    if (!bin) return result("Command is not allowlisted", true);
-    try { return result(execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 })); }
+  instrumentTool("bash", { type: "object", properties: { command: { type: "string" } }, required: ["command"] }, (input) => {
+    try { return result(execFileSync("sh", ["-lc", input.command], { cwd: workspace, encoding: "utf8", timeout: 120000, maxBuffer: 10 * 1024 * 1024 })); }
     catch (error) { return result(`${error.stdout ?? ""}\n${error.stderr ?? error.message}`, true); }
   }),
 ];
@@ -72,25 +65,21 @@ try {
   const context = JSON.parse(process.env.PARETO_TASK_CONTEXT ?? "");
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY missing");
+  const abortController = new AbortController();
+  const cancel = () => abortController.abort();
+  process.once("SIGTERM", cancel);
+  process.once("SIGINT", cancel);
   const agent = new Agent({
-    apiType: "openrouter",
-    apiKey,
-    model: context.model.id,
-    cwd: workspace,
-    tools: workspaceTools,
-    maxTurns,
-    permissionMode: "bypassPermissions",
+    apiType: "openrouter", apiKey, model: context.model.id, cwd: workspace, tools: workspaceTools,
+    maxTurns, permissionMode: "bypassPermissions", abortController,
     systemPrompt: "You are a coding agent working only through the supplied tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary.",
   });
   emit({ type: "agent.message", role: "user", content: context.task.prompt });
   const response = await agent.prompt(`${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}`);
+  process.off("SIGTERM", cancel);
+  process.off("SIGINT", cancel);
   emit({ type: "agent.message", role: "assistant", content: response.text || "completed" });
-  process.stdout.write(JSON.stringify({
-    status: "completed",
-    output: response.text || "completed",
-    usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
-    trace: trace(),
-  }));
+  process.stdout.write(JSON.stringify({ status: "completed", output: response.text || "completed", usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens }, trace: trace() }));
 } catch (error) {
   process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), trace: trace() }));
 }
