@@ -1,5 +1,6 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { buildLadder, normalizeCatalog } from "./frontier.js";
@@ -18,23 +19,29 @@ const task: CodingTask = { id: "interval-normalizer", prompt: "Implement src/int
 
 class ContainerWorkspace implements AttemptWorkspace {
   private baseline = "";
+  private async emptyWorkspace() {
+    await mkdir(workspaceDirectory, { recursive: true });
+    for (const entry of await readdir(workspaceDirectory)) {
+      await rm(join(workspaceDirectory, entry), { recursive: true, force: true });
+    }
+  }
   async setup() {
-    await rm(workspaceDirectory, { recursive: true, force: true });
+    await this.emptyWorkspace();
     await mkdir(reportsDirectory, { recursive: true });
     await execFile("git", ["clone", "-q", source, workspaceDirectory]);
     this.baseline = (await execFile("git", ["-C", workspaceDirectory, "rev-parse", "HEAD"])).stdout.trim();
     return { sourceCommit: this.baseline, baselineCommit: this.baseline, workingDirectory: workspaceDirectory, artifactsDirectory: reportsDirectory };
   }
   async snapshotAndReset(attemptNumber: number) {
-    await execFile("git", ["-C", workspaceDirectory, "add", "-N", "."]);
-    const patch = (await execFile("git", ["-C", workspaceDirectory, "diff", "--binary", this.baseline])).stdout;
+    await execFile("git", ["-C", workspaceDirectory, "add", "-N", "--", ".", ":(exclude)node_modules"]);
+    const patch = (await execFile("git", ["-C", workspaceDirectory, "diff", "--binary", this.baseline, "--", ".", ":(exclude)node_modules"])).stdout;
     const path = `${reportsDirectory}/attempt-${attemptNumber}.patch`;
     await writeFile(path, patch);
     await execFile("git", ["-C", workspaceDirectory, "reset", "--hard", this.baseline]);
     await execFile("git", ["-C", workspaceDirectory, "clean", "-fdx"]);
     return { path, attemptNumber };
   }
-  async cleanup() { await rm(workspaceDirectory, { recursive: true, force: true }); }
+  async cleanup() { await this.emptyWorkspace(); }
 }
 
 class InContainerOpenRouterWorker implements TaskWorker {

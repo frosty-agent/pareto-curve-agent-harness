@@ -76,6 +76,7 @@ export interface TraceReport {
 }
 
 const secretKeyPattern = /(?:api[_-]?key|authorization|token|password|secret|cookie)/i;
+const tokenAccountingKeyPattern = /^(?:input|output|total)[_-]?tokens?$/i;
 const bearerPattern = /\b(?:Bearer\s+|sk-(?:or|ant|proj)-)[A-Za-z0-9._-]+/gi;
 
 /** Return a JSON-safe copy that cannot persist common credential fields or tokens. */
@@ -84,7 +85,7 @@ export function redactReportSecrets(value: unknown): unknown {
   if (value && typeof value === "object") {
     return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
       key,
-      secretKeyPattern.test(key) ? "[REDACTED]" : redactReportSecrets(entry),
+      secretKeyPattern.test(key) && !tokenAccountingKeyPattern.test(key) ? "[REDACTED]" : redactReportSecrets(entry),
     ]));
   }
   return typeof value === "string" ? value.replace(bearerPattern, "[REDACTED]") : value;

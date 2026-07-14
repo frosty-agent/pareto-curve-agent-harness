@@ -19,6 +19,8 @@ COPY src ./src
 COPY open-agent-worker.mjs ./open-agent-worker.mjs
 COPY --from=open-agent-sdk /opt/open-agent-sdk /opt/open-agent-sdk
 RUN chmod 0444 /app/open-agent-worker.mjs && chown -R node:node /app /opt/open-agent-sdk
+# The runner creates a disposable clone here after dropping root privileges.
+RUN mkdir -p /workspace /reports && chown -R node:node /workspace /reports
 
 # At runtime mount the target repository read-only at /source and a host output directory at /reports.
 # OPENROUTER_API_KEY is injected with docker -e, never copied into the image.

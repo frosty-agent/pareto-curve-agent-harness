@@ -23,6 +23,9 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(dockerfile, /COPY --from=open-agent-sdk \/opt\/open-agent-sdk \/opt\/open-agent-sdk/);
   assert.match(dockerfile, /COPY src \.\/src/);
   assert.match(dockerfile, /COPY open-agent-worker\.mjs \.\/open-agent-worker\.mjs/);
+  assert.match(dockerfile, /RUN chmod 0444 \/app\/open-agent-worker\.mjs && chown -R node:node \/app \/opt\/open-agent-sdk/);
+  // The runner executes as node and must be able to create its disposable Git clone.
+  assert.match(dockerfile, /RUN mkdir -p \/workspace \/reports && chown -R node:node \/workspace \/reports/);
   assert.match(dockerfile, /ENTRYPOINT \["node", "--import", "tsx", "src\/container-run\.ts"\]/);
   assert.match(dockerfile, /mount the target repository read-only at \/source and a host output directory at \/reports/);
   assert.match(dockerfile, /OPENROUTER_API_KEY is injected with docker -e, never copied into the image/);
@@ -30,8 +33,14 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   // These are deliberately direct calls in the runner, not orchestration delegated to the host.
   assert.match(runner, /const source = "\/source"/);
   assert.match(runner, /const workspaceDirectory = "\/workspace"/);
+  // `/workspace` is an image-owned top-level directory: the node user can clear it, not remove it from `/`.
+  assert.match(runner, /await mkdir\(workspaceDirectory, \{ recursive: true \}\)/);
+  assert.match(runner, /for \(const entry of await readdir\(workspaceDirectory\)\)/);
+  assert.doesNotMatch(runner, /rm\(workspaceDirectory, \{ recursive: true, force: true \}\)/);
   assert.match(runner, /const reportsDirectory = "\/reports"/);
   assert.match(runner, /git", \["clone", "-q", source, workspaceDirectory\]/);
+  // Dependency installs must not make retry patch capture exceed its buffer or pollute artifacts.
+  assert.match(runner, /"\:\(exclude\)node_modules"/);
   assert.match(runner, /execFile\("node", \["\/app\/open-agent-worker\.mjs"\]/);
   assert.match(runner, /const catalog = await fetchCatalog\(\)/);
   assert.match(runner, /buildLadder\(normalizeCatalog\(catalog/);

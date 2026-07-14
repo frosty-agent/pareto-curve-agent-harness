@@ -30,6 +30,11 @@ test("renders a mobile-safe, escaped agent trace containing tool, hook, and MCP 
   assert.match(html, /echo &lt;unsafe&gt;/);
 });
 
+test("preserves token accounting while redacting credential fields", () => {
+  const redacted = redactReportSecrets({ inputTokens: 123, outputTokens: 45, apiKey: "secret" });
+  assert.deepEqual(redacted, { inputTokens: 123, outputTokens: 45, apiKey: "[REDACTED]" });
+});
+
 test("redacts credential fields and bearer-style values before report persistence", () => {
   const redacted = redactReportSecrets({ apiKey: "sk-or-should-not-appear", nested: { authorization: "Bearer private-token" }, output: "used sk-ant-example" });
   assert.deepEqual(redacted, { apiKey: "[REDACTED]", nested: { authorization: "[REDACTED]" }, output: "used [REDACTED]" });
