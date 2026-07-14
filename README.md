@@ -77,6 +77,18 @@ docker build -f Dockerfile.task-sandbox -t pareto-task-sandbox:latest .
 
 A task runner must arrange for its worker to execute inside the workspace identified by `WorkspaceInfo.workingDirectory`; this package deliberately does not embed a coding-provider API or task sandbox command.
 
+## Issues and project tracking
+
+[GitHub Issues](https://github.com/frosty-agent/pareto-curve-agent-harness/issues) is the canonical tracker for this repository. Please open new bugs, feature requests, and implementation work there.
+
+The unfinished work was migrated from the former Linear project on July 14, 2026:
+
+- [#1 — Capture session, hooks, MCP, and tool trace in reports](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/1) (from `AGE-10`)
+- [#2 — Adopt fork as Docker coding-worker runtime](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/2) (from `AGE-9`)
+- [#3 — Run and evaluate OpenRouter Pareto agent ladder end-to-end](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/3) (from `AGE-11`)
+
+Each migrated issue links back to its Linear source for historical context. GitHub is authoritative for status and discussion going forward.
+
 ## Development
 
 ```bash
