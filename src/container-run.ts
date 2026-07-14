@@ -7,6 +7,7 @@ import { fetchCatalog } from "./cli.js";
 import { OpenRouterJudge } from "./openrouter-judge.js";
 import { ParetoTaskLadder, type AttemptWorkspace, type CodingTask, type TaskWorker, type WorkerContext, type WorkerResult } from "./task-ladder.js";
 import { writeReports } from "./report.js";
+import { traceFromLadderResult } from "./agent-trace.js";
 
 const execFile = promisify(execFileCallback);
 const source = "/source";
@@ -49,7 +50,7 @@ async function main() {
   const availableModels = buildLadder(normalizeCatalog(catalog, { inputTokens: 12_000, outputTokens: 4_000, excludePreview: true }), 10);
   const ladder = availableModels.map(({ id, codingIndex, intelligenceIndex }) => ({ id, codingIndex, intelligenceIndex }));
   const result = await new ParetoTaskLadder(new InContainerOpenRouterWorker(), new OpenRouterJudge(), new ContainerWorkspace()).run(task, ladder);
-  const report = { generatedAt: new Date().toISOString(), kind: "containerized-openrouter-pareto-task-run", task, availableModels, invokedModels: result.attempts.map((a) => ({ attemptNumber: a.attemptNumber, model: a.model, workerStatus: a.workerResult?.status ?? "not-invoked", usage: a.workerResult?.usage, success: a.judgeResult?.successful ?? false, error: a.error })), result };
+  const report = { generatedAt: new Date().toISOString(), kind: "containerized-openrouter-pareto-task-run", task, availableModels, invokedModels: result.attempts.map((a) => ({ attemptNumber: a.attemptNumber, model: a.model, workerStatus: a.workerResult?.status ?? "not-invoked", usage: a.workerResult?.usage, success: a.judgeResult?.successful ?? false, error: a.error })), result, trace: traceFromLadderResult(result) };
   await writeReports(report, reportsDirectory);
   console.log(JSON.stringify(report, null, 2));
 }

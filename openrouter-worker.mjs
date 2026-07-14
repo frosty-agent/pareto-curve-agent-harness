@@ -20,12 +20,18 @@ function toolResult(name, args) {
   throw new Error(`Unknown tool ${name}`);
 }
 function usageOf(result) { const u = result.usage ?? {}; return { inputTokens: u.promptTokens ?? u.prompt_tokens ?? 0, outputTokens: u.completionTokens ?? u.completion_tokens ?? 0, costUsd: u.cost ?? 0 }; }
+const startedAt = new Date().toISOString();
+const events = [];
+let sequence = 0;
+function emit(event) { events.push({ eventId: `worker-${++sequence}`, sequence, timestamp: new Date().toISOString(), ...event }); }
+function trace() { return { startedAt, endedAt: new Date().toISOString(), events }; }
 try {
   const context = JSON.parse(process.env.PARETO_TASK_CONTEXT ?? "");
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY missing");
   const client = new OpenRouter({ apiKey, appTitle: "Pareto Curve Agent Harness" });
   const messages = [{ role: "system", content: "You are a coding agent working only through tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary. Never use shell commands outside run_check." }, { role: "user", content: `${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}` }];
+  emit({ type: "agent.message", role: "user", content: messages[1].content });
   let inputTokens = 0, outputTokens = 0, costUsd = 0, final = "Tool budget exhausted";
   for (let round = 0; round < maxToolRounds; round += 1) {
     const result = await client.chat.send({ chatRequest: { model: context.model.id, temperature: 0, messages, tools, toolChoice: "auto" } });
@@ -33,11 +39,19 @@ try {
     const message = result.choices?.[0]?.message;
     if (!message) throw new Error("OpenRouter returned no assistant message");
     messages.push(message);
+    emit({ type: "agent.message", role: "assistant", content: String(message.content ?? "") });
     if (!message.toolCalls?.length) { final = String(message.content ?? "completed"); break; }
     for (const call of message.toolCalls) {
-      let output; try { output = toolResult(call.function.name, JSON.parse(call.function.arguments)); } catch (error) { output = `Tool error: ${error instanceof Error ? error.message : String(error)}`; }
+      const eventId = `worker-${sequence + 1}`;
+      let args;
+      try { args = JSON.parse(call.function.arguments); } catch { args = { rawArguments: call.function.arguments }; }
+      emit({ type: "tool.call", toolCallId: call.id, toolName: call.function.name, status: "started", input: args });
+      const toolStartedAt = Date.now();
+      let output; let error;
+      try { output = toolResult(call.function.name, args); } catch (caught) { error = caught instanceof Error ? caught : new Error(String(caught)); output = `Tool error: ${error.message}`; }
+      emit({ type: "tool.result", parentEventId: eventId, toolCallId: call.id, toolName: call.function.name, status: error ? "failed" : "succeeded", output: { content: output }, ...(error ? { error: { name: error.name, message: error.message } } : {}), durationMs: Date.now() - toolStartedAt });
       messages.push({ role: "tool", toolCallId: call.id, content: output });
     }
   }
-  process.stdout.write(JSON.stringify({ status: "completed", output: final, usage: { inputTokens, outputTokens, costUsd } }));
-} catch (error) { process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error) })); }
+  process.stdout.write(JSON.stringify({ status: "completed", output: final, usage: { inputTokens, outputTokens, costUsd }, trace: trace() }));
+} catch (error) { process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), trace: trace() })); }

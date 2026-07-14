@@ -43,6 +43,7 @@ test("judges a worker-reported success with the highest-intelligence model", asy
   const worker: TaskWorker = {
     async run(context) {
       workerCalls.push(context.model.id);
+      assert.equal(context.attemptNumber, 1);
       assert.equal(context.workspace.sourceCommit, "source-sha");
       return { status: "completed", output: "implemented" };
     },
