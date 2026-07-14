@@ -1,5 +1,6 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { promisify } from "node:util";
 
 import { buildLadder, normalizeCatalog } from "./frontier.js";
@@ -18,7 +19,10 @@ const task: CodingTask = { id: "interval-normalizer", prompt: "Implement src/int
 class ContainerWorkspace implements AttemptWorkspace {
   private baseline = "";
   async setup() {
-    await rm(workspaceDirectory, { recursive: true, force: true });
+    // /workspace is provisioned by the image and owned by the unprivileged runner;
+    // clear its contents rather than unlinking the directory from the root-owned parent.
+    await mkdir(workspaceDirectory, { recursive: true });
+    await Promise.all((await readdir(workspaceDirectory)).map((entry) => rm(join(workspaceDirectory, entry), { recursive: true, force: true })));
     await mkdir(reportsDirectory, { recursive: true });
     await execFile("git", ["clone", "-q", source, workspaceDirectory]);
     this.baseline = (await execFile("git", ["-C", workspaceDirectory, "rev-parse", "HEAD"])).stdout.trim();
@@ -33,7 +37,9 @@ class ContainerWorkspace implements AttemptWorkspace {
     await execFile("git", ["-C", workspaceDirectory, "clean", "-fdx"]);
     return { path, attemptNumber };
   }
-  async cleanup() { await rm(workspaceDirectory, { recursive: true, force: true }); }
+  async cleanup() {
+    await Promise.all((await readdir(workspaceDirectory)).map((entry) => rm(join(workspaceDirectory, entry), { recursive: true, force: true })));
+  }
 }
 
 class InContainerOpenRouterWorker implements TaskWorker {
