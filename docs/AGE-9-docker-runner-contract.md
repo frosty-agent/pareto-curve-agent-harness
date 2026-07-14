@@ -1,6 +1,6 @@
 # AGE-9 Docker runner contract
 
-This is the migration contract for replacing `openrouter-worker.mjs` with the adapter from the verified fork [`frosty-agent/open-agent-sdk-typescript`](https://github.com/frosty-agent/open-agent-sdk-typescript) at commit `dc439c6`.
+This is the migration contract for replacing `openrouter-worker.mjs` with the adapter from the verified fork [`frosty-agent/open-agent-sdk-typescript`](https://github.com/frosty-agent/open-agent-sdk-typescript) at commit `6933905657de3349ad34d88737f09807dbc4b75e`.
 
 ## Invocation boundary
 
@@ -18,7 +18,7 @@ docker run --rm \
 
 ## Fork adapter interface
 
-The fork adapter is installed in the runner image and is called once per ladder attempt by the in-container runner. It must receive:
+The runner Dockerfile clones, builds, and copies the pinned fork into `/opt/open-agent-sdk`; `open-agent-worker.mjs` imports its `Agent` runtime from that path and is called once per ladder attempt by the in-container runner. It must receive:
 
 | Input | Contract |
 | --- | --- |
@@ -28,7 +28,7 @@ The fork adapter is installed in the runner image and is called once per ladder 
 | `/source` | Read-only target repository. The runner clones it into `/workspace`; the adapter must not edit it. |
 | `/reports` | Runner-owned report/patch output directory. The adapter does not need to write here. |
 
-The adapter writes exactly one JSON `WorkerResult` to stdout. Its stdout therefore cannot contain progress logging. Diagnostics belong on stderr. The adapter must not run a host command, invoke Docker, or expect a Docker socket.
+The adapter writes exactly one JSON `WorkerResult` to stdout. Its stdout therefore cannot contain progress logging. Diagnostics belong on stderr. The fork `Agent` receives only the adapter's workspace-scoped `read_file`, `list_files`, `write_file`, and allowlisted `run_check` tools, so its tool calls and tool results remain in the Docker worker. The adapter must not run a host command, invoke Docker, or expect a Docker socket.
 
 ## No-host-loop invariant
 
