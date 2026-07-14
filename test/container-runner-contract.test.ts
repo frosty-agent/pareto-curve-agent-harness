@@ -43,8 +43,14 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(worker, /apiType: "openrouter"/);
   assert.match(worker, /tools: workspaceTools/);
   assert.match(worker, /await agent\.prompt\(/);
-  assert.match(worker, /name: "write_file"/);
-  assert.match(worker, /name: "run_check"/);
+  assert.match(worker, /instrumentTool\("write_file"/);
+  assert.match(worker, /instrumentTool\("run_check"/);
+  // Runtime tool calls and their wrapper hook lifecycle become v2 report facts.
+  assert.match(worker, /type: "tool\.call"/);
+  assert.match(worker, /type: "tool\.result"/);
+  assert.match(worker, /type: "hook\.started"/);
+  assert.match(worker, /type: "hook\.completed"/);
+  assert.match(worker, /trace: trace\(\)/);
 
   // No Docker child worker or host-orchestrated per-model loop is permitted inside the runner.
   assert.doesNotMatch(runner, /DockerCommandWorker|DockerGitWorkspace|docker\s+run|docker\.sock/i);
