@@ -1,3 +1,4 @@
+import { OpenRouter } from "@openrouter/sdk";
 import type { JudgeContext, JudgeResult, TaskJudge } from "./task-ladder.js";
 
 export class OpenRouterJudge implements TaskJudge {
@@ -6,22 +7,18 @@ export class OpenRouterJudge implements TaskJudge {
   }
 
   async judge(context: JudgeContext): Promise<JudgeResult> {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json", "X-Title": "Pareto Curve Agent Harness" },
-      body: JSON.stringify({
+    const client = new OpenRouter({ apiKey: this.apiKey, appTitle: "Pareto Curve Agent Harness" });
+    const payload = await client.chat.send({
+      chatRequest: {
         model: context.judgeModel.id,
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: "You are a strict coding-task judge. Return only JSON: {successful:boolean, learnings:string}. Judge against the task and evidence; do not trust the worker's claimed success." },
-          { role: "user", content: JSON.stringify({ task: context.task, attempt: context.attempt, workspace: { sourceCommit: context.workspace.sourceCommit, baselineCommit: context.workspace.baselineCommit } }) },
-        ],
-      }),
-      signal: AbortSignal.timeout(30_000),
+      temperature: 0,
+      responseFormat: { type: "json_object" },
+      messages: [
+        { role: "system", content: "You are a strict coding-task judge. Return only JSON: {successful:boolean, learnings:string}. Judge against the task and evidence; do not trust the worker's claimed success." },
+        { role: "user", content: JSON.stringify({ task: context.task, attempt: context.attempt, workspace: { sourceCommit: context.workspace.sourceCommit, baselineCommit: context.workspace.baselineCommit } }) },
+      ],
+      },
     });
-    if (!response.ok) throw new Error(`OpenRouter judge request failed: ${response.status} ${await response.text()}`);
-    const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) throw new Error("OpenRouter judge response did not contain a message");
     const result = JSON.parse(content) as Partial<JudgeResult>;
