@@ -21,8 +21,11 @@ export class OpenRouterJudge implements TaskJudge {
     });
     const content = payload.choices?.[0]?.message?.content;
     if (!content) throw new Error("OpenRouter judge response did not contain a message");
-    const result = JSON.parse(content) as Partial<JudgeResult>;
-    if (typeof result.successful !== "boolean" || typeof result.learnings !== "string") throw new Error("OpenRouter judge returned invalid JSON result");
+    const normalizedContent = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    let result: Partial<JudgeResult>;
+    try { result = JSON.parse(normalizedContent) as Partial<JudgeResult>; }
+    catch { throw new Error(`OpenRouter judge returned invalid JSON result: ${content}`); }
+    if (typeof result.successful !== "boolean" || typeof result.learnings !== "string") throw new Error(`OpenRouter judge returned invalid JSON result: ${content}`);
     return {
       successful: result.successful,
       learnings: result.learnings,
