@@ -116,6 +116,7 @@ class ParetoAdapter(BaseClawAdapter):
                 "-e", f"PARETO_LADDER_JSON={json.dumps(self.ladder, separators=(',', ':'))}",
                 "-e", f"PARETO_JUDGE_MODEL={self.judge_model}",
                 "-e", f"PARETO_TASK_COST_CAP_USD={self.task_cost_cap_usd}",
+                "-e", f"PARETO_DEADLINE_EPOCH_MS={int((time.time() + self.timeout - 15) * 1000)}",
             ])
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if api_key:

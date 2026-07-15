@@ -10,6 +10,7 @@ const taskContext = JSON.parse(process.env.PARETO_TASK_CONTEXT ?? "{}");
 const ladder = JSON.parse(process.env.PARETO_LADDER_JSON ?? "[]");
 const judgeModel = process.env.PARETO_JUDGE_MODEL;
 const capUsd = Number(process.env.PARETO_TASK_COST_CAP_USD);
+const deadlineEpochMs = Number(process.env.PARETO_DEADLINE_EPOCH_MS);
 
 function fail(message) {
   process.stdout.write(JSON.stringify({ status: "failed", output: message }));
@@ -18,9 +19,10 @@ function fail(message) {
 function git(args) { return execFileSync("git", ["-C", workspace, ...args], { encoding: "utf8" }); }
 function finiteCost(value) { return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null; }
 function save(name, value) { mkdirSync(artifactRoot, { recursive: true }); writeFileSync(`${artifactRoot}/${name}`, typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`); }
-function runWorker(context) {
+function runWorker(context, timeoutMs) {
   const result = spawnSync(process.execPath, [workerPath], {
     encoding: "utf8",
+    timeout: timeoutMs,
     env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) },
   });
   let payload = {};
@@ -56,6 +58,7 @@ if (!apiKey) fail("OPENROUTER_API_KEY is required");
 else if (!Array.isArray(ladder) || !ladder.length || !ladder.every((model) => typeof model?.id === "string")) fail("PARETO_LADDER_JSON must contain model IDs");
 else if (!judgeModel) fail("PARETO_JUDGE_MODEL is required for a dynamic ladder");
 else if (!Number.isFinite(capUsd) || capUsd < 0) fail("PARETO_TASK_COST_CAP_USD must be a finite non-negative number");
+else if (!Number.isFinite(deadlineEpochMs) || deadlineEpochMs <= Date.now()) fail("PARETO_DEADLINE_EPOCH_MS must be a future epoch timestamp");
 else {
   const baseline = git(["rev-parse", "HEAD"]).trim();
   const client = new OpenRouter({ apiKey, appTitle: "Pareto Curve Agent Harness" });
@@ -71,7 +74,12 @@ else {
     const estimate = finiteCost(model.expectedCostUsd);
     if (estimate === null || spent + estimate > capUsd) { finalOutput = "Cost cap prevents next rung"; break; }
     const context = { ...taskContext, attemptNumber: index + 1, model, previousAttempt, task: { ...taskContext.task, costCapUsd: capUsd, costSpentUsd: spent } };
-    const worker = runWorker(context);
+    const remainingCandidates = ladder.length - index - 1;
+    const remainingMs = deadlineEpochMs - Date.now();
+    const reserveMs = remainingCandidates * 90_000;
+    const workerTimeoutMs = Math.min(300_000, remainingMs - reserveMs);
+    if (workerTimeoutMs < 10_000) { finalOutput = "Time budget prevents next rung"; break; }
+    const worker = runWorker(context, workerTimeoutMs);
     save(`attempt-${index + 1}-worker-stdout.log`, worker.stdout);
     save(`attempt-${index + 1}-worker-stderr.log`, worker.stderr);
     save(`attempt-${index + 1}-worker-result.json`, worker.payload);
