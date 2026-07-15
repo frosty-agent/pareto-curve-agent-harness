@@ -92,7 +92,16 @@ else {
     finalWorker = worker.payload;
     finalOutput = worker.payload?.output ?? finalOutput;
     if (verdict.successful) { accepted = true; break; }
-    previousAttempt = { model, workerResult: worker.payload, judgeResult: verdict, changeSnapshot: { path: attempt.patchPath, attemptNumber: index + 1 } };
+    previousAttempt = {
+      model,
+      workerResult: {
+        status: worker.payload?.status,
+        output: worker.payload?.output,
+        usage: worker.payload?.usage,
+      },
+      judgeResult: verdict,
+      changeSnapshot: { path: attempt.patchPath, attemptNumber: index + 1 },
+    };
     if (index + 1 < ladder.length) {
       git(["reset", "--hard", baseline]);
       git(["clean", "-fdx"]);
