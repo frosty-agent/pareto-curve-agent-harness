@@ -47,11 +47,11 @@ class ContainerWorkspace implements AttemptWorkspace {
 class InContainerOpenRouterWorker implements TaskWorker {
   async run(context: WorkerContext): Promise<WorkerResult> {
     try {
-      const { stdout } = await execFile("node", ["/app/open-agent-worker.mjs"], { env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) }, timeout: 90_000, maxBuffer: 10 * 1024 * 1024 });
+      const { stdout } = await execFile("node", ["/app/open-agent-worker.mjs"], { env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) }, timeout: 180_000, maxBuffer: 10 * 1024 * 1024 });
       return JSON.parse(stdout) as WorkerResult;
     } catch (error) {
-      const failed = error as { message?: string; stderr?: string };
-      throw new Error(`Worker process failed: ${failed.message ?? String(error)}\n${failed.stderr ?? ""}`);
+      const failed = error as { message?: string; stderr?: string; stdout?: string; signal?: string; killed?: boolean };
+      throw new Error(`Worker process failed: ${failed.message ?? String(error)}\nsignal=${failed.signal ?? "none"} killed=${failed.killed ?? false}\nstderr=${failed.stderr ?? ""}\nstdout=${failed.stdout ?? ""}`);
     }
   }
 }

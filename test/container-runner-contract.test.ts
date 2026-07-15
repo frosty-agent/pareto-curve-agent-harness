@@ -44,6 +44,8 @@ test("AGE-9 runner contract keeps the complete attempt loop inside one container
   assert.match(runner, /execFile\("node", \["\/app\/open-agent-worker\.mjs"\]/);
   // Worker failures must retain stderr so a live runner report is actionable.
   assert.match(runner, /failed\.stderr/);
+  assert.match(runner, /failed\.stdout/);
+  assert.match(runner, /failed\.signal/);
   assert.match(runner, /Worker process failed:/);
   assert.match(runner, /const catalog = await fetchCatalog\(\)/);
   assert.match(runner, /buildLadder\(normalizeCatalog\(catalog/);
