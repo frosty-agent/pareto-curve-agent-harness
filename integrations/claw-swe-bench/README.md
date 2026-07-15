@@ -34,7 +34,7 @@ Then register `ParetoAdapter` in that checkout's
 
 ```bash
 export PARETO_RUNTIME_DIR=/path/to/pareto-curve-agent-harness
-export PARETO_NODE_BIN=/usr/bin/node
+export PARETO_NODE_BIN="$(command -v node)"
 export OPENROUTER_API_KEY=... # do not put this in the image or artifacts
 ```
 

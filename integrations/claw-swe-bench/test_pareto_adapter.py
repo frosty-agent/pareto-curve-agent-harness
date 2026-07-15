@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,7 +27,7 @@ class FakeAgentResult:
         self.__dict__.update(kwargs)
 
 
-def load_adapter(runtime: Path):
+def load_adapter(runtime: Path, node_bin: str | None = "/usr/bin/node"):
     base_module = types.ModuleType("claw_swebench.claws.base")
     base_module.BaseClawAdapter = FakeBaseClawAdapter
     base_module.decode_output = lambda value: value.decode() if isinstance(value, bytes) else value or ""
@@ -44,7 +45,10 @@ def load_adapter(runtime: Path):
     old_runtime = os.environ.get("PARETO_RUNTIME_DIR")
     old_node = os.environ.get("PARETO_NODE_BIN")
     os.environ["PARETO_RUNTIME_DIR"] = str(runtime)
-    os.environ["PARETO_NODE_BIN"] = "/usr/bin/node"
+    if node_bin is None:
+        os.environ.pop("PARETO_NODE_BIN", None)
+    else:
+        os.environ["PARETO_NODE_BIN"] = node_bin
     spec = importlib.util.spec_from_file_location("pareto_adapter_under_test", ADAPTER_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -85,6 +89,13 @@ class ParetoAdapterTest(unittest.TestCase):
         else:
             os.environ["OPENROUTER_API_KEY"] = self.original_api_key
         self.temp.cleanup()
+
+    def test_defaults_node_path_from_the_host_environment(self):
+        module, cleanup = load_adapter(self.runtime, node_bin=None)
+        try:
+            self.assertEqual(module.PARETO_NODE_BIN, shutil.which("node"))
+        finally:
+            cleanup()
 
     def test_runs_worker_in_testbed_with_configured_turn_and_timeout_limits(self):
         adapter = self.module.ParetoAdapter("vendor/model", timeout=30, max_turns=7)

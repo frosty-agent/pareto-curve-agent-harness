@@ -12,6 +12,7 @@ prepared /testbed workspace, and preserves the structured worker response.
 
 import json
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -21,7 +22,7 @@ from claw_swebench.types import AgentResult
 
 
 PARETO_RUNTIME_DIR = Path(os.environ.get("PARETO_RUNTIME_DIR", ".")).resolve()
-PARETO_NODE_BIN = os.environ.get("PARETO_NODE_BIN", "/usr/bin/node")
+PARETO_NODE_BIN = os.environ.get("PARETO_NODE_BIN") or shutil.which("node") or "/usr/bin/node"
 PARETO_WORKER_PATH = "/opt/pareto/openrouter-worker.mjs"
 SUBPROCESS_TIMEOUT_BUFFER = 120
 
