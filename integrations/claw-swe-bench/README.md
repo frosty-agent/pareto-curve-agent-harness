@@ -11,6 +11,11 @@ official evaluator invocation.
 - Pareto's runtime can be bind-mounted read-only into a Claw-SWE-Bench instance.
 - The worker receives the standard Claw-SWE-Bench prompt and operates in
   `/testbed`, not Pareto's normal `/workspace` mount.
+- Claw-SWE-Bench's `max_turns` is forwarded as `PARETO_MAX_TOOL_ROUNDS`; the
+  worker defaults to 12 rounds only when no positive limit is configured.
+- Each worker process is wrapped by the container's `timeout` command. If the
+  Docker exec client itself times out, the adapter explicitly kills the worker
+  process in the instance container before recording the timeout.
 - The adapter saves worker stdout, stderr, and parsed worker JSON alongside the
   Claw-SWE-Bench patch and metadata artifacts.
 - Worker usage is returned through `collect_usage()` for the benchmark's

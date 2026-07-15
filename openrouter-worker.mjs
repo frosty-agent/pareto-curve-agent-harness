@@ -4,7 +4,8 @@ import { resolve, relative } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
 
 const workspace = process.env.PARETO_WORKSPACE ?? "/workspace";
-const maxToolRounds = 12;
+const configuredMaxToolRounds = Number.parseInt(process.env.PARETO_MAX_TOOL_ROUNDS ?? "12", 10);
+const maxToolRounds = Number.isSafeInteger(configuredMaxToolRounds) && configuredMaxToolRounds > 0 ? configuredMaxToolRounds : 12;
 const tools = [
   { type: "function", function: { name: "read_file", description: "Read a UTF-8 file below /workspace.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
   { type: "function", function: { name: "list_files", description: "List files below /workspace.", parameters: { type: "object", properties: { path: { type: "string" } } } } },

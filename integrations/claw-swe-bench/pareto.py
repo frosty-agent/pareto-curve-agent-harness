@@ -68,15 +68,21 @@ class ParetoAdapter(BaseClawAdapter):
             "model": {"id": self.model, "codingIndex": 0, "intelligenceIndex": None},
             "previousAttempt": None,
         }
+        turn_limit = self.max_turns if self.max_turns and self.max_turns > 0 else 12
         command = [
             "docker", "exec",
             "-e", "PARETO_WORKSPACE=/testbed",
+            "-e", f"PARETO_MAX_TOOL_ROUNDS={turn_limit}",
             "-e", f"PARETO_TASK_CONTEXT={json.dumps(context, separators=(',', ':'))}",
         ]
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if api_key:
             command.extend(["-e", f"OPENROUTER_API_KEY={api_key}"])
-        command.extend([container_name, PARETO_NODE_BIN, PARETO_WORKER_PATH])
+        command.extend([
+            container_name,
+            "timeout", "--signal=KILL", f"{self.timeout}s",
+            PARETO_NODE_BIN, PARETO_WORKER_PATH,
+        ])
 
         started = time.time()
         timed_out = False
@@ -90,11 +96,20 @@ class ParetoAdapter(BaseClawAdapter):
             exit_code = result.returncode
             stdout = result.stdout
             stderr = result.stderr
+            timed_out = exit_code in {124, 137}
         except subprocess.TimeoutExpired as error:
             timed_out = True
             exit_code = -1
             stdout = decode_output(error.stdout)
             stderr = decode_output(error.stderr)
+            termination = subprocess.run(
+                ["docker", "exec", container_name, "pkill", "-KILL", "-f", "[o]penrouter-worker.mjs"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            if termination.returncode != 0:
+                stderr = f"{stderr}\nFailed to terminate timed-out Pareto worker: {termination.stderr}".strip()
 
         parsed: dict = {}
         try:

@@ -20,4 +20,6 @@ test("OpenRouter worker can use a benchmark workspace instead of only /workspace
   const worker = await readFile(join(process.cwd(), "openrouter-worker.mjs"), "utf8");
 
   assert.match(worker, /process\.env\.PARETO_WORKSPACE \?\? "\/workspace"/);
+  assert.match(worker, /process\.env\.PARETO_MAX_TOOL_ROUNDS \?\? "12"/);
+  assert.match(worker, /configuredMaxToolRounds.*> 0 \? configuredMaxToolRounds : 12/);
 });
