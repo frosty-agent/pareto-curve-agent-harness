@@ -17,8 +17,22 @@ function toolResult(name, args) {
   if (name === "read_file") return readFileSync(safePath(args.path), "utf8");
   if (name === "list_files") return readdirSync(safePath(args.path ?? "."), { recursive: true }).slice(0, 300).join("\n");
   if (name === "write_file") { writeFileSync(safePath(args.path), args.content, "utf8"); return "written"; }
-  if (name === "run_check") { const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] }; const [bin, argv] = allowed[args.command] ?? []; if (!bin) throw new Error("Command is not allowlisted"); try { return execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 }); } catch (error) { return `${error.stdout ?? ""}\n${error.stderr ?? error.message}`; } }
-  throw new Error(`Unknown tool ${name}`);
+  if (name === "run_check") {
+    const normalized = args.command.trim().replace(/^cd \/testbed\s+&&\s+/, "");
+    const allowed = {
+      "npm test": ["npm", ["test"]],
+      "npm run build": ["npm", ["run", "build"]],
+      "git diff": ["git", ["diff"]],
+      "git status --short": ["git", ["status", "--short"]],
+      "git log --oneline -20": ["git", ["log", "--oneline", "-20"]],
+    };
+    let [bin, argv] = allowed[normalized] ?? [];
+    const pythonTest = /^(python|python3)\s+tests\/runtests\.py(?:\s+[A-Za-z0-9_./-]+)*$/.exec(normalized);
+    if (pythonTest) [bin, argv] = [pythonTest[1], normalized.split(/\s+/).slice(1)];
+    if (!bin) throw new Error("Command is not allowlisted");
+    try { return execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 }); }
+    catch (error) { return `${error.stdout ?? ""}\n${error.stderr ?? error.message}`; }
+  }  throw new Error(`Unknown tool ${name}`);
 }
 function usageOf(result) {
   const u = result.usage ?? {};

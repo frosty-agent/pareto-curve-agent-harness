@@ -22,4 +22,6 @@ test("OpenRouter worker can use a benchmark workspace instead of only /workspace
   assert.match(worker, /process\.env\.PARETO_WORKSPACE \?\? "\/workspace"/);
   assert.match(worker, /process\.env\.PARETO_MAX_TOOL_ROUNDS \?\? "12"/);
   assert.match(worker, /configuredMaxToolRounds.*> 0 \? configuredMaxToolRounds : 12/);
+  assert.match(worker, /tests\\\/runtests\\\.py/);
+  assert.match(worker, /git log --oneline -20/);
 });
