@@ -20,7 +20,15 @@ function toolResult(name, args) {
   if (name === "run_check") { const allowed = { "npm test": ["npm", ["test"]], "npm run build": ["npm", ["run", "build"]], "git diff": ["git", ["diff"]], "git status --short": ["git", ["status", "--short"]] }; const [bin, argv] = allowed[args.command] ?? []; if (!bin) throw new Error("Command is not allowlisted"); try { return execFileSync(bin, argv, { cwd: workspace, encoding: "utf8", timeout: 120000 }); } catch (error) { return `${error.stdout ?? ""}\n${error.stderr ?? error.message}`; } }
   throw new Error(`Unknown tool ${name}`);
 }
-function usageOf(result) { const u = result.usage ?? {}; return { inputTokens: u.promptTokens ?? u.prompt_tokens ?? 0, outputTokens: u.completionTokens ?? u.completion_tokens ?? 0, costUsd: u.cost ?? 0 }; }
+function usageOf(result) {
+  const u = result.usage ?? {};
+  const rawCost = u.cost;
+  return {
+    inputTokens: u.promptTokens ?? u.prompt_tokens ?? 0,
+    outputTokens: u.completionTokens ?? u.completion_tokens ?? 0,
+    costUsd: typeof rawCost === "number" && Number.isFinite(rawCost) && rawCost >= 0 ? rawCost : null,
+  };
+}
 const startedAt = new Date().toISOString();
 const events = [];
 let sequence = 0;
@@ -33,10 +41,14 @@ try {
   const client = new OpenRouter({ apiKey, appTitle: "Pareto Curve Agent Harness" });
   const messages = [{ role: "system", content: "You are a coding agent working only through tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary. Never use shell commands outside run_check." }, { role: "user", content: `${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}` }];
   emit({ type: "agent.message", role: "user", content: messages[1].content });
-  let inputTokens = 0, outputTokens = 0, costUsd = 0, final = "Tool budget exhausted";
+  let inputTokens = 0, outputTokens = 0, costUsd = 0, costAccountingComplete = true, final = "Tool budget exhausted";
   for (let round = 0; round < maxToolRounds; round += 1) {
     const result = await client.chat.send({ chatRequest: { model: context.model.id, temperature: 0, messages, tools, toolChoice: "auto" } });
-    const usage = usageOf(result); inputTokens += usage.inputTokens; outputTokens += usage.outputTokens; costUsd += usage.costUsd;
+    const usage = usageOf(result);
+    inputTokens += usage.inputTokens;
+    outputTokens += usage.outputTokens;
+    if (usage.costUsd === null) costAccountingComplete = false;
+    else costUsd += usage.costUsd;
     const message = result.choices?.[0]?.message;
     if (!message) throw new Error("OpenRouter returned no assistant message");
     messages.push(message);
@@ -54,5 +66,15 @@ try {
       messages.push({ role: "tool", toolCallId: call.id, content: output });
     }
   }
-  process.stdout.write(JSON.stringify({ status: "completed", output: final, usage: { inputTokens, outputTokens, costUsd }, trace: trace() }));
+  process.stdout.write(JSON.stringify({
+    status: "completed",
+    output: final,
+    usage: {
+      inputTokens,
+      outputTokens,
+      costAccountingComplete,
+      ...(costAccountingComplete ? { costUsd } : {}),
+    },
+    trace: trace(),
+  }));
 } catch (error) { process.stdout.write(JSON.stringify({ status: "failed", output: error instanceof Error ? error.message : String(error), trace: trace() })); }

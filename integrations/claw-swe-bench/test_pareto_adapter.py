@@ -31,6 +31,7 @@ def load_adapter(
     runtime: Path,
     node_bin: str | None = "/usr/bin/node",
     ladder_path: Path | None = None,
+    task_cost_cap_usd: str | None = None,
 ):
     base_module = types.ModuleType("claw_swebench.claws.base")
     base_module.BaseClawAdapter = FakeBaseClawAdapter
@@ -49,6 +50,7 @@ def load_adapter(
     old_runtime = os.environ.get("PARETO_RUNTIME_DIR")
     old_node = os.environ.get("PARETO_NODE_BIN")
     old_ladder = os.environ.get("PARETO_LADDER_PATH")
+    old_cap = os.environ.get("PARETO_TASK_COST_CAP_USD")
     os.environ["PARETO_RUNTIME_DIR"] = str(runtime)
     if node_bin is None:
         os.environ.pop("PARETO_NODE_BIN", None)
@@ -58,6 +60,10 @@ def load_adapter(
         os.environ.pop("PARETO_LADDER_PATH", None)
     else:
         os.environ["PARETO_LADDER_PATH"] = str(ladder_path)
+    if task_cost_cap_usd is None:
+        os.environ.pop("PARETO_TASK_COST_CAP_USD", None)
+    else:
+        os.environ["PARETO_TASK_COST_CAP_USD"] = task_cost_cap_usd
     spec = importlib.util.spec_from_file_location("pareto_adapter_under_test", ADAPTER_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -81,6 +87,10 @@ def load_adapter(
             os.environ.pop("PARETO_LADDER_PATH", None)
         else:
             os.environ["PARETO_LADDER_PATH"] = old_ladder
+        if old_cap is None:
+            os.environ.pop("PARETO_TASK_COST_CAP_USD", None)
+        else:
+            os.environ["PARETO_TASK_COST_CAP_USD"] = old_cap
 
     return module, cleanup
 
@@ -93,6 +103,7 @@ class ParetoAdapterTest(unittest.TestCase):
         self.runtime = Path(self.temp.name) / "runtime"
         (self.runtime / "node_modules" / "@openrouter" / "sdk").mkdir(parents=True)
         (self.runtime / "openrouter-worker.mjs").write_text("// fixture\n")
+        (self.runtime / "openrouter-ladder-worker.mjs").write_text("// fixture\n")
         self.module, self.cleanup_module = load_adapter(self.runtime)
 
     def tearDown(self):
@@ -116,7 +127,7 @@ class ParetoAdapterTest(unittest.TestCase):
             {"id": "cheap/model", "codingIndex": 50, "intelligenceIndex": 40},
             {"id": "strong/model", "codingIndex": 80, "intelligenceIndex": 70},
         ]}))
-        module, cleanup = load_adapter(self.runtime, ladder_path=snapshot)
+        module, cleanup = load_adapter(self.runtime, ladder_path=snapshot, task_cost_cap_usd="1.0")
         try:
             adapter = module.ParetoAdapter("fallback/model", timeout=30, max_turns=7)
             self.assertEqual([model["id"] for model in adapter.ladder], ["cheap/model", "strong/model"])
@@ -124,6 +135,8 @@ class ParetoAdapterTest(unittest.TestCase):
             module.subprocess.run = lambda command, **kwargs: calls.append(command) or types.SimpleNamespace(returncode=0, stdout=json.dumps({"status": "completed", "output": "done"}), stderr="")
             adapter.send_task("fix it", "agent", "instance-container", None, "demo__ladder")
             self.assertIn('"id":"cheap/model"', " ".join(calls[0]))
+            self.assertIn(module.PARETO_LADDER_WORKER_PATH, calls[0])
+            self.assertIn("PARETO_TASK_COST_CAP_USD=1.0", calls[0])
         finally:
             cleanup()
 

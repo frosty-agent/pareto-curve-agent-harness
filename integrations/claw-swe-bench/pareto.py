@@ -24,6 +24,7 @@ from claw_swebench.types import AgentResult
 PARETO_RUNTIME_DIR = Path(os.environ.get("PARETO_RUNTIME_DIR", ".")).resolve()
 PARETO_NODE_BIN = os.environ.get("PARETO_NODE_BIN") or shutil.which("node") or "/usr/bin/node"
 PARETO_WORKER_PATH = "/opt/pareto/openrouter-worker.mjs"
+PARETO_LADDER_WORKER_PATH = "/opt/pareto/openrouter-ladder-worker.mjs"
 SUBPROCESS_TIMEOUT_BUFFER = 120
 
 
@@ -53,6 +54,14 @@ class ParetoAdapter(BaseClawAdapter):
     def __init__(self, model: str, timeout: int, max_turns: int | None = None):
         super().__init__(model, timeout, max_turns)
         self.ladder = load_ladder(model)
+        self.dynamic_ladder = bool(os.environ.get("PARETO_LADDER_PATH"))
+        self.task_cost_cap_usd = float(os.environ.get("PARETO_TASK_COST_CAP_USD", "0"))
+        self.judge_model = max(
+            self.ladder,
+            key=lambda candidate: candidate.get("intelligenceIndex") if isinstance(candidate.get("intelligenceIndex"), (int, float)) else -1,
+        )["id"]
+        if self.dynamic_ladder and self.task_cost_cap_usd <= 0:
+            raise RuntimeError("PARETO_TASK_COST_CAP_USD must be positive for a dynamic ladder")
         self._usage_by_instance: dict[str, dict] = {}
 
     def container_run_args(self, instance_id: str) -> list[str]:
@@ -65,6 +74,8 @@ class ParetoAdapter(BaseClawAdapter):
             raise RuntimeError(
                 "PARETO_RUNTIME_DIR must include installed @openrouter/sdk dependencies"
             )
+        if self.dynamic_ladder and not (PARETO_RUNTIME_DIR / "openrouter-ladder-worker.mjs").is_file():
+            raise RuntimeError("PARETO_RUNTIME_DIR must contain openrouter-ladder-worker.mjs for a dynamic ladder")
         return [
             "-v", f"{PARETO_RUNTIME_DIR}:/opt/pareto:ro",
             "-v", f"{PARETO_NODE_BIN}:{PARETO_NODE_BIN}:ro",
@@ -100,13 +111,20 @@ class ParetoAdapter(BaseClawAdapter):
             "-e", f"PARETO_MAX_TOOL_ROUNDS={turn_limit}",
             "-e", f"PARETO_TASK_CONTEXT={json.dumps(context, separators=(',', ':'))}",
         ]
+        if self.dynamic_ladder:
+            command.extend([
+                "-e", f"PARETO_LADDER_JSON={json.dumps(self.ladder, separators=(',', ':'))}",
+                "-e", f"PARETO_JUDGE_MODEL={self.judge_model}",
+                "-e", f"PARETO_TASK_COST_CAP_USD={self.task_cost_cap_usd}",
+            ])
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if api_key:
             command.extend(["-e", f"OPENROUTER_API_KEY={api_key}"])
         command.extend([
             container_name,
             "timeout", "--signal=KILL", f"{self.timeout}s",
-            PARETO_NODE_BIN, PARETO_WORKER_PATH,
+            PARETO_NODE_BIN,
+            PARETO_LADDER_WORKER_PATH if self.dynamic_ladder else PARETO_WORKER_PATH,
         ])
 
         started = time.time()
