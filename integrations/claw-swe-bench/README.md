@@ -43,6 +43,16 @@ export OPENROUTER_API_KEY=... # do not put this in the image or artifacts
 `node_modules/@openrouter/sdk` dependency. The adapter checks those paths
 before the benchmark container starts.
 
+## Benchmark handoff invariant
+
+Claw-SWE-Bench/the official SWE-bench evaluator must see **only one patch per
+instance**: the final patch left in `/testbed` after Pareto's internal judge
+accepts an attempt. Failed ladder attempts are private Pareto diagnostics:
+their artifacts may be retained under the run directory, but their patches are
+snapshotted and the workspace is reset before the next rung. If every rung is
+rejected or the cost cap stops the ladder, no attempt patch is submitted to the
+benchmark evaluator.
+
 ## Current boundary
 
 The adapter now loads a recorded catalog snapshot and uses the first Pareto
