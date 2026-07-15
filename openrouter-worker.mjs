@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { OpenRouter } from "@openrouter/sdk";
 
-const workspace = "/workspace";
+const workspace = process.env.PARETO_WORKSPACE ?? "/workspace";
 const maxToolRounds = 12;
 const tools = [
   { type: "function", function: { name: "read_file", description: "Read a UTF-8 file below /workspace.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
