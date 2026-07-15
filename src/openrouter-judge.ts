@@ -7,6 +7,7 @@ export class OpenRouterJudge implements TaskJudge {
   }
 
   async judge(context: JudgeContext): Promise<JudgeResult> {
+    console.error(`[ladder] attempt=${context.attempt.attemptNumber} role=judge model=${context.judgeModel.id} status=started`);
     const client = new OpenRouter({ apiKey: this.apiKey, appTitle: "Pareto Curve Agent Harness" });
     const payload = await client.chat.send({
       chatRequest: {
@@ -26,6 +27,7 @@ export class OpenRouterJudge implements TaskJudge {
     try { result = JSON.parse(normalizedContent) as Partial<JudgeResult>; }
     catch { throw new Error(`OpenRouter judge returned invalid JSON result: ${content}`); }
     if (typeof result.successful !== "boolean" || typeof result.learnings !== "string") throw new Error(`OpenRouter judge returned invalid JSON result: ${content}`);
+    console.error(`[ladder] attempt=${context.attempt.attemptNumber} role=judge model=${context.judgeModel.id} status=completed successful=${result.successful}`);
     return {
       successful: result.successful,
       learnings: result.learnings,

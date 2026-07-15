@@ -15,7 +15,7 @@ const source = "/source";
 const workspaceDirectory = "/workspace";
 const reportsDirectory = "/reports";
 
-const task: CodingTask = { id: "interval-normalizer", prompt: "Implement src/interval.ts exporting immutable normalizeIntervals(input). Validate finite endpoints/end >= start, sort, merge overlap and directly-adjacent integer intervals, add node:test coverage, then run npm test and npm run build." };
+const task: CodingTask = { id: "cli-task", prompt: process.env.PARETO_TASK_PROMPT ?? "Implement src/interval.ts exporting immutable normalizeIntervals(input). Validate finite endpoints/end >= start, sort, merge overlap and directly-adjacent integer intervals, add node:test coverage, then run npm test and npm run build." };
 
 class ContainerWorkspace implements AttemptWorkspace {
   private baseline = "";
@@ -46,9 +46,12 @@ class ContainerWorkspace implements AttemptWorkspace {
 
 class InContainerOpenRouterWorker implements TaskWorker {
   async run(context: WorkerContext): Promise<WorkerResult> {
+    console.error(`[ladder] attempt=${context.attemptNumber} role=worker model=${context.model.id} status=started`);
     try {
       const { stdout } = await execFile("node", ["/app/open-agent-worker.mjs"], { env: { ...process.env, PARETO_TASK_CONTEXT: JSON.stringify(context) }, timeout: 180_000, maxBuffer: 10 * 1024 * 1024 });
-      return JSON.parse(stdout) as WorkerResult;
+      const result = JSON.parse(stdout) as WorkerResult;
+      console.error(`[ladder] attempt=${context.attemptNumber} role=worker model=${context.model.id} status=${result.status}`);
+      return result;
     } catch (error) {
       const failed = error as { message?: string; stderr?: string; stdout?: string; signal?: string; killed?: boolean };
       throw new Error(`Worker process failed: ${failed.message ?? String(error)}\nsignal=${failed.signal ?? "none"} killed=${failed.killed ?? false}\nstderr=${failed.stderr ?? ""}\nstdout=${failed.stdout ?? ""}`);

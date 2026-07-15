@@ -42,6 +42,35 @@ Unset `OPENROUTER_API_KEY` after the run.
 
 The key is optional for the catalog endpoint. When supplied, the CLI sends it only as an OpenRouter authorization header and reports `authConfigured: true`; it never prints the key.
 
+## Run a coding task ladder
+
+Build the dedicated runner image:
+
+```bash
+docker build -f Dockerfile.runner -t pareto-runner:latest .
+```
+
+Run a prompt against a target Git repository. Docker and a reachable Docker daemon are required; the wrapper checks both before starting. Export `OPENROUTER_API_KEY` in your shell (or retrieve it from your secret manager) first:
+
+```bash
+export OPENROUTER_API_KEY="…"
+scripts/run-ladder.sh \
+  --prompt 'Implement the requested feature and run the project checks.' \
+  --source /path/to/target-repository \
+  --reports /tmp/pareto-reports
+```
+
+The target source is bind-mounted read-only at `/source`; reports (JSON, HTML, and retry patches) are written to `--reports`. The runner emits progress lines for each ladder invocation, including attempt number, model ID, and whether it is a worker or judge.
+
+By default, task work occurs in the runner's disposable `/workspace`. To retain or inspect the isolated cloned workspace on the host, provide an explicit workspace volume:
+
+```bash
+scripts/run-ladder.sh --prompt '…' --source /path/to/target-repository \
+  --workspace /tmp/pareto-workspace --reports /tmp/pareto-reports
+```
+
+Run `scripts/run-ladder.sh --help` for all options.
+
 ## Policy controls
 
 ```bash
