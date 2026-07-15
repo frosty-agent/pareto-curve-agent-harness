@@ -61,6 +61,7 @@ else {
   const client = new OpenRouter({ apiKey, appTitle: "Pareto Curve Agent Harness" });
   const attempts = [];
   let spent = 0;
+  let accountingComplete = true;
   let previousAttempt = null;
   let finalWorker = null;
   let finalOutput = "Ladder exhausted";
@@ -75,7 +76,7 @@ else {
     save(`attempt-${index + 1}-worker-stderr.log`, worker.stderr);
     save(`attempt-${index + 1}-worker-result.json`, worker.payload);
     const workerCost = finiteCost(worker.payload?.usage?.costUsd);
-    if (worker.payload?.usage?.costAccountingComplete !== true || workerCost === null) { finalWorker = worker.payload; finalOutput = "Worker cost unavailable"; attempts.push({ attemptNumber: index + 1, model, worker: worker.payload, stop: "cost_unavailable" }); break; }
+    if (worker.payload?.usage?.costAccountingComplete !== true || workerCost === null) { accountingComplete = false; finalWorker = worker.payload; finalOutput = "Worker cost unavailable"; attempts.push({ attemptNumber: index + 1, model, worker: worker.payload, stop: "cost_unavailable" }); break; }
     spent += workerCost;
     const patch = git(["diff", "--binary", baseline]);
     save(`attempt-${index + 1}.patch`, patch);
@@ -84,7 +85,7 @@ else {
     catch (error) { finalWorker = worker.payload; finalOutput = error instanceof Error ? error.message : String(error); attempts.push({ attemptNumber: index + 1, model, worker: worker.payload, stop: "judge_error" }); break; }
     save(`attempt-${index + 1}-judge-result.json`, verdict);
     const judgeCost = finiteCost(verdict.usage?.costUsd);
-    if (judgeCost === null) { finalWorker = worker.payload; finalOutput = "Judge cost unavailable"; attempts.push({ attemptNumber: index + 1, model, worker: worker.payload, judge: verdict, stop: "cost_unavailable" }); break; }
+    if (judgeCost === null) { accountingComplete = false; finalWorker = worker.payload; finalOutput = "Judge cost unavailable"; attempts.push({ attemptNumber: index + 1, model, worker: worker.payload, judge: verdict, stop: "cost_unavailable" }); break; }
     spent += judgeCost;
     const attempt = { attemptNumber: index + 1, model, worker: worker.payload, judge: verdict, patchPath: `attempt-${index + 1}.patch` };
     attempts.push(attempt);
@@ -98,7 +99,7 @@ else {
       if (git(["rev-parse", "HEAD"]).trim() !== baseline || git(["status", "--porcelain"]).trim()) throw new Error("Failed to reset workspace before next rung");
     }
   }
-  const result = { status: accepted ? "completed" : "failed", output: finalOutput, usage: { costUsd: spent, costAccountingComplete: true }, ladder: { baseline, accepted, attempts, costCapUsd: capUsd } };
+  const result = { status: accepted ? "completed" : "failed", output: finalOutput, usage: { costUsd: spent, costAccountingComplete: accountingComplete }, ladder: { baseline, accepted, attempts, costCapUsd: capUsd } };
   save("pareto-ladder-result.json", result);
   process.stdout.write(JSON.stringify(result));
 }
