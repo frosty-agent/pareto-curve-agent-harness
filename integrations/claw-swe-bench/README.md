@@ -35,6 +35,7 @@ Then register `ParetoAdapter` in that checkout's
 ```bash
 export PARETO_RUNTIME_DIR=/path/to/pareto-curve-agent-harness
 export PARETO_NODE_BIN="$(command -v node)"
+export PARETO_LADDER_PATH=/path/to/recorded-catalog-snapshot.json
 export OPENROUTER_API_KEY=... # do not put this in the image or artifacts
 ```
 
@@ -44,7 +45,12 @@ before the benchmark container starts.
 
 ## Current boundary
 
-This is an adapter/provenance slice, not a completed SWE-bench evaluation.
+The adapter now loads a recorded catalog snapshot and uses the first Pareto
+frontier rung rather than an ad-hoc fixed model. Full judge-driven escalation,
+per-task budget enforcement, and comparison reports are the next implementation
+slice; a ladder-configured smoke must not yet be described as a completed
+Pareto-vs-harness matrix.
+
 The existing Pareto worker's `run_check` tool has a Node-only command allowlist
 (`npm test`, `npm run build`, and Git inspection). Most SWE-bench instances
 require language- and instance-specific test commands. The next implementation

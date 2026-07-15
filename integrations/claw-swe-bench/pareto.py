@@ -27,6 +27,24 @@ PARETO_WORKER_PATH = "/opt/pareto/openrouter-worker.mjs"
 SUBPROCESS_TIMEOUT_BUFFER = 120
 
 
+def load_ladder(fallback_model: str) -> list[dict]:
+    """Load the pre-recorded Pareto ladder, or use the explicit fallback model."""
+    ladder_path = os.environ.get("PARETO_LADDER_PATH")
+    if not ladder_path:
+        return [{"id": fallback_model, "codingIndex": 0, "intelligenceIndex": None}]
+    try:
+        payload = json.loads(Path(ladder_path).read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Unable to load PARETO_LADDER_PATH={ladder_path}: {error}") from error
+    models = payload.get("models") if isinstance(payload, dict) else payload
+    if not isinstance(models, list) or not models:
+        raise RuntimeError("Recorded Pareto ladder must contain a non-empty models array")
+    ladder = [model for model in models if isinstance(model, dict) and isinstance(model.get("id"), str)]
+    if len(ladder) != len(models):
+        raise RuntimeError("Recorded Pareto ladder contains a model without an id")
+    return ladder
+
+
 class ParetoAdapter(BaseClawAdapter):
     """Run Pareto's OpenRouter tool loop inside a prepared SWE-bench container."""
 
@@ -34,6 +52,7 @@ class ParetoAdapter(BaseClawAdapter):
 
     def __init__(self, model: str, timeout: int, max_turns: int | None = None):
         super().__init__(model, timeout, max_turns)
+        self.ladder = load_ladder(model)
         self._usage_by_instance: dict[str, dict] = {}
 
     def container_run_args(self, instance_id: str) -> list[str]:
@@ -64,9 +83,14 @@ class ParetoAdapter(BaseClawAdapter):
         if artifact_dir:
             artifact_dir.mkdir(parents=True, exist_ok=True)
 
+        selected_model = self.ladder[0]
         context = {
             "task": {"id": instance_id, "prompt": prompt},
-            "model": {"id": self.model, "codingIndex": 0, "intelligenceIndex": None},
+            "model": {
+                "id": selected_model["id"],
+                "codingIndex": selected_model.get("codingIndex", 0),
+                "intelligenceIndex": selected_model.get("intelligenceIndex"),
+            },
             "previousAttempt": None,
         }
         turn_limit = self.max_turns if self.max_turns and self.max_turns > 0 else 12

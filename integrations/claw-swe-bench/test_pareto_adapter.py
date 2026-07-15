@@ -27,7 +27,11 @@ class FakeAgentResult:
         self.__dict__.update(kwargs)
 
 
-def load_adapter(runtime: Path, node_bin: str | None = "/usr/bin/node"):
+def load_adapter(
+    runtime: Path,
+    node_bin: str | None = "/usr/bin/node",
+    ladder_path: Path | None = None,
+):
     base_module = types.ModuleType("claw_swebench.claws.base")
     base_module.BaseClawAdapter = FakeBaseClawAdapter
     base_module.decode_output = lambda value: value.decode() if isinstance(value, bytes) else value or ""
@@ -44,11 +48,16 @@ def load_adapter(runtime: Path, node_bin: str | None = "/usr/bin/node"):
     })
     old_runtime = os.environ.get("PARETO_RUNTIME_DIR")
     old_node = os.environ.get("PARETO_NODE_BIN")
+    old_ladder = os.environ.get("PARETO_LADDER_PATH")
     os.environ["PARETO_RUNTIME_DIR"] = str(runtime)
     if node_bin is None:
         os.environ.pop("PARETO_NODE_BIN", None)
     else:
         os.environ["PARETO_NODE_BIN"] = node_bin
+    if ladder_path is None:
+        os.environ.pop("PARETO_LADDER_PATH", None)
+    else:
+        os.environ["PARETO_LADDER_PATH"] = str(ladder_path)
     spec = importlib.util.spec_from_file_location("pareto_adapter_under_test", ADAPTER_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -68,6 +77,10 @@ def load_adapter(runtime: Path, node_bin: str | None = "/usr/bin/node"):
             os.environ.pop("PARETO_NODE_BIN", None)
         else:
             os.environ["PARETO_NODE_BIN"] = old_node
+        if old_ladder is None:
+            os.environ.pop("PARETO_LADDER_PATH", None)
+        else:
+            os.environ["PARETO_LADDER_PATH"] = old_ladder
 
     return module, cleanup
 
@@ -94,6 +107,23 @@ class ParetoAdapterTest(unittest.TestCase):
         module, cleanup = load_adapter(self.runtime, node_bin=None)
         try:
             self.assertEqual(module.PARETO_NODE_BIN, shutil.which("node"))
+        finally:
+            cleanup()
+
+    def test_loads_dynamic_ladder_from_recorded_catalog_snapshot(self):
+        snapshot = Path(self.temp.name) / "catalog.json"
+        snapshot.write_text(json.dumps({"models": [
+            {"id": "cheap/model", "codingIndex": 50, "intelligenceIndex": 40},
+            {"id": "strong/model", "codingIndex": 80, "intelligenceIndex": 70},
+        ]}))
+        module, cleanup = load_adapter(self.runtime, ladder_path=snapshot)
+        try:
+            adapter = module.ParetoAdapter("fallback/model", timeout=30, max_turns=7)
+            self.assertEqual([model["id"] for model in adapter.ladder], ["cheap/model", "strong/model"])
+            calls = []
+            module.subprocess.run = lambda command, **kwargs: calls.append(command) or types.SimpleNamespace(returncode=0, stdout=json.dumps({"status": "completed", "output": "done"}), stderr="")
+            adapter.send_task("fix it", "agent", "instance-container", None, "demo__ladder")
+            self.assertIn('"id":"cheap/model"', " ".join(calls[0]))
         finally:
             cleanup()
 
