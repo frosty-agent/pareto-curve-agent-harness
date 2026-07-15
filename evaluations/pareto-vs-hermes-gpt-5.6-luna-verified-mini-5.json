@@ -1,6 +1,6 @@
 {
   "schemaVersion": "pareto-harness-comparison/v1",
-  "name": "pareto-vs-hermes-verified-mini-10",
+  "name": "pareto-vs-hermes-gpt-5.6-luna-verified-mini-5",
   "dataset": {
     "name": "princeton-nlp/SWE-bench_Verified",
     "revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
@@ -8,20 +8,15 @@
     "sourceList": "Claw-SWE-Bench config/verified_mini_50.txt"
   },
   "selection": {
-    "method": "first five stable entries per repository in verified_mini_50",
+    "method": "first three Django and first two Sphinx entries in verified_mini_50",
     "rationale": "A deterministic exploratory slice covering both repositories in the available Verified-Mini list; this is not a representative or publishable score."
   },
   "tasks": [
     "django__django-11790",
     "django__django-11815",
     "django__django-11848",
-    "django__django-11880",
-    "django__django-11885",
     "sphinx-doc__sphinx-10323",
-    "sphinx-doc__sphinx-10435",
-    "sphinx-doc__sphinx-10466",
-    "sphinx-doc__sphinx-11510",
-    "sphinx-doc__sphinx-7590"
+    "sphinx-doc__sphinx-10435"
   ],
   "comparison": {
     "systems": [
@@ -31,10 +26,12 @@
       },
       {
         "id": "hermes-agent",
-        "modelPolicy": "native-policy"
+        "modelPolicy": "fixed-leading-model",
+        "model": "openai/gpt-5.6-luna"
       }
     ],
     "timeoutSeconds": 1200,
+    "perTaskBudgetUsd": 9,
     "perSystemBudgetUsd": 45,
     "aggregateBudgetUsd": 90,
     "contingencyBudgetUsd": 10,
