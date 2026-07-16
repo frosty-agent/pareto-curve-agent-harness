@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { createPersistentInstanceResult, decideInstanceSubmission, predictionLine, sha256, writePersistentInstanceResult, type InstanceSubmissionInput } from "../src/benchmark-artifacts.js";
+import { processBenchmarkArtifactsInput } from "../src/benchmark-artifacts-cli.js";
 
 function validInput(): InstanceSubmissionInput {
   const finalPatch = "diff --git a/a b/a\n--- a/a\n+++ b/a\n@@\n-old\n+new\n";
@@ -58,4 +59,18 @@ test("writes a durable versioned result atomically under the caller-owned root",
   const path = await writePersistentInstanceResult(root, result);
   assert.equal(path, join(root, "pareto-instance-result.json"));
   assert.deepEqual(JSON.parse(await readFile(path, "utf8")), result);
+});
+
+test("canonical gate bridge persists both accepted and rejected decisions but returns a prediction only for accepted input", async () => {
+  const root = await mkdtemp(join(tmpdir(), "pareto-gate-cli-test-"));
+  const accepted = await processBenchmarkArtifactsInput(join(root, "accepted"), validInput());
+  assert.equal(accepted.result.decision.eligible, true);
+  assert.equal(accepted.prediction?.instance_id, "repo__task-1");
+
+  const rejectedInput = validInput();
+  rejectedInput.internalJudgeAccepted = false;
+  const rejected = await processBenchmarkArtifactsInput(join(root, "rejected"), rejectedInput);
+  assert.equal(rejected.result.decision.eligible, false);
+  assert.equal(rejected.prediction, null);
+  assert.equal(JSON.parse(await readFile(rejected.resultPath, "utf8")).decision.reasons[0], "internal_judge_rejected");
 });
