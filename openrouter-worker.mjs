@@ -10,7 +10,7 @@ const tools = [
   { type: "function", function: { name: "read_file", description: "Read a UTF-8 file below /workspace.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
   { type: "function", function: { name: "list_files", description: "List files below /workspace.", parameters: { type: "object", properties: { path: { type: "string" } } } } },
   { type: "function", function: { name: "write_file", description: "Create or replace a UTF-8 file below /workspace.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
-  { type: "function", function: { name: "run_check", description: "Run exactly one allowed validation command: npm test, npm run build, git diff, or git status --short.", parameters: { type: "object", properties: { command: { type: "string", enum: ["npm test", "npm run build", "git diff", "git status --short"] } }, required: ["command"] } } },
+  { type: "function", function: { name: "run_check", description: "Run one allowed validation command. Allowed commands are: npm test; npm run build; git diff; git status --short; git log --oneline -20; or python/python3 tests/runtests.py followed by simple test labels. A leading `cd /testbed &&` is accepted.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
 ];
 function safePath(path) { const target = resolve(workspace, path); if (relative(workspace, target).startsWith("..")) throw new Error("Path escapes workspace"); return target; }
 function toolResult(name, args) {
@@ -53,7 +53,7 @@ try {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY missing");
   const client = new OpenRouter({ apiKey, appTitle: "Pareto Curve Agent Harness" });
-  const messages = [{ role: "system", content: "You are a coding agent working only through tools. Inspect the repository, edit files, and run checks. When the task is complete, reply with a concise final summary. Never use shell commands outside run_check." }, { role: "user", content: `${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}` }];
+  const messages = [{ role: "system", content: "You are a coding agent working only through tools. Inspect the repository, edit files, and run checks. Before you claim completion, run the most relevant available targeted test for the changed behavior; do not accept a change based only on a rendered-output intuition. Report exact validation commands and results in the final summary. Never use shell commands outside run_check." }, { role: "user", content: `${context.task.prompt}\nPrevious attempt: ${JSON.stringify(context.previousAttempt ?? null)}` }];
   emit({ type: "agent.message", role: "user", content: messages[1].content });
   let inputTokens = 0, outputTokens = 0, costUsd = 0, costAccountingComplete = true, final = "Tool budget exhausted";
   for (let round = 0; round < maxToolRounds; round += 1) {
