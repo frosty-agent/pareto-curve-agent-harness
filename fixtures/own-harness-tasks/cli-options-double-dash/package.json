@@ -1,0 +1,8 @@
+{
+  "name": "fixture-cli-options-double-dash",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/args.test.js"
+  }
+}

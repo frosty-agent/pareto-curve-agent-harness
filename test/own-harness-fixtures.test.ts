@@ -9,6 +9,6 @@ const validator = fileURLToPath(new URL("../fixtures/own-harness-tasks/validate-
 
 test("owned Node fixture manifest is hash-bound and its broken baselines fail", async () => {
   const { stdout, stderr } = await execFileAsync(process.execPath, [validator]);
-  assert.match(stdout, /validated 3 intentionally failing fixture baselines/);
+  assert.match(stdout, /validated [1-9][0-9]* intentionally failing fixture baselines/);
   assert.equal(stderr, "");
 });

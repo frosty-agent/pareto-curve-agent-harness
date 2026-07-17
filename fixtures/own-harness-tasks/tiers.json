@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "pareto-owned-node-tiers/v1",
+  "description": "Nested immutable task tiers for fast owned-Node harness iteration.",
+  "fixtureManifest": {
+    "path": "manifest.json",
+    "sha256": "fa8abfe546ea08370fc709d3a8a231ffa2cbd5e25606b67e6f46c71cb064a3a9"
+  },
+  "tiers": {
+    "single": {
+      "taskIds": [
+        "config-numeric-attribute"
+      ]
+    },
+    "lite": {
+      "taskIds": [
+        "config-numeric-attribute",
+        "retry-cancellation-backoff",
+        "safe-relative-atomic-writer",
+        "http-utf8-content-length",
+        "url-query-repeat-empty-values",
+        "cli-options-double-dash",
+        "ndjson-chunk-framer"
+      ]
+    },
+    "full": {
+      "taskIds": [
+        "config-numeric-attribute",
+        "retry-cancellation-backoff",
+        "safe-relative-atomic-writer",
+        "http-utf8-content-length",
+        "url-query-repeat-empty-values",
+        "cli-options-double-dash",
+        "ndjson-chunk-framer",
+        "bounded-async-pool-order",
+        "http-range-single-byte",
+        "content-type-quoted-parameters",
+        "etag-conditional-file-response",
+        "signed-token-malformed-input",
+        "secure-static-path-resolution"
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "fixture-url-query-repeat-empty-values",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/url.test.js"
+  }
+}

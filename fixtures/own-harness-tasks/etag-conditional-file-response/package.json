@@ -1,0 +1,8 @@
+{
+  "name": "fixture-etag-conditional-file-response",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/etag.test.js"
+  }
+}

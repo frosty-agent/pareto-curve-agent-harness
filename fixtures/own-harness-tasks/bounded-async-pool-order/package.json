@@ -1,0 +1,8 @@
+{
+  "name": "fixture-bounded-async-pool-order",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/pool.test.js"
+  }
+}

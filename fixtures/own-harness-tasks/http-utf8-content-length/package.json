@@ -1,0 +1,8 @@
+{
+  "name": "fixture-http-utf8-content-length",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/request.test.js"
+  }
+}

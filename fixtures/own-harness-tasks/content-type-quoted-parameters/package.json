@@ -1,0 +1,8 @@
+{
+  "name": "fixture-content-type-quoted-parameters",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/content-type.test.js"
+  }
+}

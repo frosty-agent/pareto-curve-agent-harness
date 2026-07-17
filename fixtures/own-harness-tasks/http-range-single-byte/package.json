@@ -1,0 +1,8 @@
+{
+  "name": "fixture-http-range-single-byte",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/range.test.js"
+  }
+}

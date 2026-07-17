@@ -1,0 +1,8 @@
+{
+  "name": "fixture-ndjson-chunk-framer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/framer.test.js"
+  }
+}

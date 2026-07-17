@@ -1,0 +1,8 @@
+{
+  "name": "fixture-secure-static-path-resolution",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/static-path.test.js"
+  }
+}

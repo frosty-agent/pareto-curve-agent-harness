@@ -29,8 +29,8 @@ async function baselineDigest(workspace, files) {
   return hash.digest("hex");
 }
 
-if (manifest?.schemaVersion !== "pareto-owned-node-fixtures/v1" || !Array.isArray(manifest.tasks) || manifest.tasks.length !== 3) {
-  fail("expected schema version and exactly three tasks");
+if (manifest?.schemaVersion !== "pareto-owned-node-fixtures/v1" || !Array.isArray(manifest.tasks) || manifest.tasks.length === 0) {
+  fail("expected schema version and at least one task");
 }
 const ids = new Set();
 for (const task of manifest.tasks) {

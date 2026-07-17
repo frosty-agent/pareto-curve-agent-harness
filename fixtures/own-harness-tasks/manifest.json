@@ -8,12 +8,20 @@
       "promptFile": "TASK.md",
       "regression": {
         "command": "node --test test/config.test.js",
-        "argv": ["node", "--test", "test/config.test.js"]
+        "argv": [
+          "node",
+          "--test",
+          "test/config.test.js"
+        ]
       },
       "baseline": {
         "status": "expected_regression_failure",
         "sha256": "72187e96254817f33f7e116682a90ff618d7407f28bec32ff32ab65edc0823a2",
-        "files": ["package.json", "src/render-config.js", "test/config.test.js"]
+        "files": [
+          "package.json",
+          "src/render-config.js",
+          "test/config.test.js"
+        ]
       }
     },
     {
@@ -22,12 +30,20 @@
       "promptFile": "TASK.md",
       "regression": {
         "command": "node --test test/retry.test.js",
-        "argv": ["node", "--test", "test/retry.test.js"]
+        "argv": [
+          "node",
+          "--test",
+          "test/retry.test.js"
+        ]
       },
       "baseline": {
         "status": "expected_regression_failure",
         "sha256": "14a98c4de3837373eb145cd80e65eaa7cd282838155037a7bf25ad85ff78e61d",
-        "files": ["package.json", "src/retry.js", "test/retry.test.js"]
+        "files": [
+          "package.json",
+          "src/retry.js",
+          "test/retry.test.js"
+        ]
       }
     },
     {
@@ -36,12 +52,240 @@
       "promptFile": "TASK.md",
       "regression": {
         "command": "node --test test/writer.test.js",
-        "argv": ["node", "--test", "test/writer.test.js"]
+        "argv": [
+          "node",
+          "--test",
+          "test/writer.test.js"
+        ]
       },
       "baseline": {
         "status": "expected_regression_failure",
         "sha256": "9e149af947b4cd561410dc45388e4f3b66f73346b45fd47910490ef7550b2a5e",
-        "files": ["package.json", "src/writer.js", "test/writer.test.js"]
+        "files": [
+          "package.json",
+          "src/writer.js",
+          "test/writer.test.js"
+        ]
+      }
+    },
+    {
+      "id": "http-utf8-content-length",
+      "workspace": "http-utf8-content-length",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/request.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/request.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "16b632e29a7d1f64cea1fe2b7ac1e671e242d008658574d198726b8b7ca74a96",
+        "files": [
+          "package.json",
+          "src/request.js",
+          "test/request.test.js"
+        ]
+      }
+    },
+    {
+      "id": "url-query-repeat-empty-values",
+      "workspace": "url-query-repeat-empty-values",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/url.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/url.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "9df57e438b1b9b6c32447f82c01dbf22e3871a25b45c02917f6c11b7d0e6fd6f",
+        "files": [
+          "package.json",
+          "src/url.js",
+          "test/url.test.js"
+        ]
+      }
+    },
+    {
+      "id": "cli-options-double-dash",
+      "workspace": "cli-options-double-dash",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/args.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/args.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "4abcc0bf19d72c67d0c288efaed82da61585ad2747430807bd42867fb469768d",
+        "files": [
+          "package.json",
+          "src/args.js",
+          "test/args.test.js"
+        ]
+      }
+    },
+    {
+      "id": "ndjson-chunk-framer",
+      "workspace": "ndjson-chunk-framer",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/framer.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/framer.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "471982963f75a6f75520f90deb8e8ec8ab08e407d71eeda85f05c67446209f1a",
+        "files": [
+          "package.json",
+          "src/framer.js",
+          "test/framer.test.js"
+        ]
+      }
+    },
+    {
+      "id": "bounded-async-pool-order",
+      "workspace": "bounded-async-pool-order",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/pool.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/pool.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "3a11044844a416c4e11284868bd84b6b2d71c78800b6e5080416225330136bee",
+        "files": [
+          "package.json",
+          "src/pool.js",
+          "test/pool.test.js"
+        ]
+      }
+    },
+    {
+      "id": "http-range-single-byte",
+      "workspace": "http-range-single-byte",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/range.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/range.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "d60a4ca4bf355957fa4b9f3cb04494b560a59c25d46832e0f839593d461faeb6",
+        "files": [
+          "package.json",
+          "src/range.js",
+          "test/range.test.js"
+        ]
+      }
+    },
+    {
+      "id": "content-type-quoted-parameters",
+      "workspace": "content-type-quoted-parameters",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/content-type.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/content-type.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "62b3b0d147a3ccbd116f643df0fbdc0514d569113cbf9edaaa34188a1214ef72",
+        "files": [
+          "package.json",
+          "src/content-type.js",
+          "test/content-type.test.js"
+        ]
+      }
+    },
+    {
+      "id": "etag-conditional-file-response",
+      "workspace": "etag-conditional-file-response",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/etag.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/etag.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "57805a8d3ec49a58198f5400308d2711b50eaf0ae2a8de7f12d8b13fac4f8327",
+        "files": [
+          "package.json",
+          "src/etag.js",
+          "test/etag.test.js"
+        ]
+      }
+    },
+    {
+      "id": "signed-token-malformed-input",
+      "workspace": "signed-token-malformed-input",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/token.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/token.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "a2fc9b1e6c52041bb44dd50974b122b199bc1f2f881ffc2ebd71c8e788d9dd59",
+        "files": [
+          "package.json",
+          "src/token.js",
+          "test/token.test.js"
+        ]
+      }
+    },
+    {
+      "id": "secure-static-path-resolution",
+      "workspace": "secure-static-path-resolution",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/static-path.test.js",
+        "argv": [
+          "node",
+          "--test",
+          "test/static-path.test.js"
+        ]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "2960b8e03d0fac651969b40a03f17cc68cddbb7a2fc0c6d23d522b6e0c5774b3",
+        "files": [
+          "package.json",
+          "src/static-path.js",
+          "test/static-path.test.js"
+        ]
       }
     }
   ]
