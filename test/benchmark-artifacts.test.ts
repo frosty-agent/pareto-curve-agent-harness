@@ -14,6 +14,7 @@ function validInput(): InstanceSubmissionInput {
     taskManifestSha256: "a".repeat(64), expectedTaskManifestSha256: "a".repeat(64),
     ladderSha256: "b".repeat(64), expectedLadderSha256: "b".repeat(64),
     scrubSucceeded: true, workerSucceeded: true, timedOut: false, internalJudgeAccepted: true, costAccountingComplete: true,
+    authoritativeActualCostUsd: 0.37,
     finalPatch, finalPatchSha256: sha256(finalPatch), acceptedPatchSha256: sha256(finalPatch),
     artifacts: [
       { relativePath: "attempts/attempt-1-worker-result.json", sha256: "c".repeat(64) },
@@ -35,6 +36,12 @@ test("rejects incomplete accounting even if an internal judge accepted a patch",
   const decision = decideInstanceSubmission(input);
   assert.equal(decision.eligible, false);
   assert.deepEqual(decision.reasons, ["cost_accounting_incomplete"]);
+});
+
+test("requires a finite provider-reported aggregate cost", () => {
+  const input = validInput();
+  input.authoritativeActualCostUsd = Number.NaN;
+  assert.deepEqual(decideInstanceSubmission(input), { eligible: false, reasons: ["cost_accounting_incomplete"] });
 });
 
 test("rejects every disqualifying benchmark state and never emits a prediction", () => {

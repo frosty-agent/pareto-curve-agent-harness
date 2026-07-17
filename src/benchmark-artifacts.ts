@@ -33,6 +33,8 @@ export interface InstanceSubmissionInput {
   timedOut: boolean;
   internalJudgeAccepted: boolean;
   costAccountingComplete: boolean;
+  /** Aggregate of provider-reported response costs; never model-pricing estimate. */
+  authoritativeActualCostUsd: number;
   finalPatch: string;
   finalPatchSha256: string;
   acceptedPatchSha256: string;
@@ -65,7 +67,7 @@ export function sha256(value: string): string {
 export function decideInstanceSubmission(input: InstanceSubmissionInput): InstanceSubmissionDecision {
   const reasons: IneligibilityReason[] = [];
   if (!input.internalJudgeAccepted) reasons.push("internal_judge_rejected");
-  if (!input.costAccountingComplete) reasons.push("cost_accounting_incomplete");
+  if (!input.costAccountingComplete || !Number.isFinite(input.authoritativeActualCostUsd) || input.authoritativeActualCostUsd < 0) reasons.push("cost_accounting_incomplete");
   if (!input.finalPatch.trim()) reasons.push("empty_final_patch");
   if (input.timedOut) reasons.push("timeout");
   if (!input.scrubSucceeded) reasons.push("contaminated_workspace");
