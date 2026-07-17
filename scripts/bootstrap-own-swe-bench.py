@@ -70,10 +70,23 @@ def prepare_one(instance_id: str, record: dict[str, Any], image: str, output_roo
     if not (target / ".git").is_dir():
         shutil.rmtree(target.parent)
         raise RuntimeError(f"{instance_id}: {image} did not contain a Git repository at /testbed")
+    source_commit = run("git", "-C", str(target), "rev-parse", "HEAD")
+    if source_commit != base_commit:
+        try:
+            # SWE-bench evaluation images often use a synthetic HEAD commit whose
+            # parent is the public instance base. Reset it rather than rejecting a
+            # perfectly usable image, but fail if the requested base is unrelated.
+            run("git", "-C", str(target), "merge-base", "--is-ancestor", base_commit, source_commit)
+            run("git", "-C", str(target), "reset", "--hard", base_commit)
+        except RuntimeError as error:
+            shutil.rmtree(target.parent)
+            raise RuntimeError(
+                f"{instance_id}: image HEAD {source_commit} is not based on dataset base_commit {base_commit}"
+            ) from error
     actual_commit = run("git", "-C", str(target), "rev-parse", "HEAD")
     if actual_commit != base_commit:
         shutil.rmtree(target.parent)
-        raise RuntimeError(f"{instance_id}: image HEAD {actual_commit} does not match dataset base_commit {base_commit}")
+        raise RuntimeError(f"{instance_id}: failed to reset copied image to dataset base_commit {base_commit}")
     run("git", "-C", str(target), "apply", "--check", "-", input_text=test_patch)
     run("git", "-C", str(target), "apply", "-", input_text=test_patch)
     return {
