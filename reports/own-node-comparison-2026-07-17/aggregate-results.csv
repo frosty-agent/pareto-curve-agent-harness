@@ -1,0 +1,7 @@
+task,policy,outcome,actual_cost_usd,cost_accounting_complete,attempts
+config-numeric-attribute,generic,resolved,0.0079607,true,1
+config-numeric-attribute,pareto,resolved,0.0007082852,true,1
+retry-cancellation-backoff,generic,unresolved,0.02738375,true,1
+retry-cancellation-backoff,pareto,resolved,0.00245158592,true,2
+safe-relative-atomic-writer,generic,resolved,0.0164735,true,1
+safe-relative-atomic-writer,pareto,resolved,0.00229324788,true,2
