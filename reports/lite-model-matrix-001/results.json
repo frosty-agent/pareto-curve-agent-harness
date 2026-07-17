@@ -1,0 +1,1576 @@
+{
+  "schemaVersion": "owned-node-suite-results/v1",
+  "scope": {
+    "tier": "lite",
+    "taskIds": [
+      "config-numeric-attribute",
+      "http-utf8-content-length",
+      "url-query-repeat-empty-values",
+      "ndjson-chunk-framer"
+    ],
+    "fixtureManifestSha256": "fa8abfe546ea08370fc709d3a8a231ffa2cbd5e25606b67e6f46c71cb064a3a9",
+    "tiersManifestSha256": "be6a3d04c4f3a2d2838f2e589c4228ad5cb17955552f64785f17a365631a3285"
+  },
+  "policies": [
+    {
+      "id": "fixed:openai/gpt-5.6-luna",
+      "model": "openai/gpt-5.6-luna",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:x-ai/grok-4.5",
+      "model": "x-ai/grok-4.5",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:anthropic/claude-opus-4.6",
+      "model": "anthropic/claude-opus-4.6",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:qwen/qwen3-coder",
+      "model": "qwen/qwen3-coder",
+      "kind": "fixed"
+    },
+    {
+      "id": "pareto:frozen-nine-rung",
+      "kind": "pareto"
+    }
+  ],
+  "genericTurns": 72,
+  "taskCostCapUsd": 9,
+  "totalCostCapUsd": 75,
+  "observedCompleteCostUsd": 0.4971734114800001,
+  "rows": [
+    {
+      "taskId": "config-numeric-attribute",
+      "policyId": "fixed:openai/gpt-5.6-luna",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.00624805,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "openai/gpt-5.6-luna",
+          "calls": [
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000724
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00148775
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00145865
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00141145
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00042695
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00073925
+            }
+          ],
+          "output": "Implemented the minimal production change in `src/render-config.js` so `maxlength` renders when `maxLength` is `0`, while remaining omitted when absent.\n\nRegression passed:\n\n```text\nnode --test test/config.test.js\n```\n\n2 tests passed.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: renders a numeric maxLength of zero\nok 1 - renders a numeric maxLength of zero\n  ---\n  duration_ms: 1.742696\n  type: 'test'\n  ...\n# Subtest: omits maxLength only when it is absent\nok 2 - omits maxLength only when it is absent\n  ---\n  duration_ms: 0.466134\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 194.524834\n"
+          },
+          "patchSha256": "9b27aeec6538db5d9bdf88bb1ad5a8b61fadfc9c98df3c50d55c45fd596d8e2f",
+          "patchBytes": 439
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "config-numeric-attribute",
+      "policyId": "fixed:x-ai/grok-4.5",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.020808000000000004,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "x-ai/grok-4.5",
+          "calls": [
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001684
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003308
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00469
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003232
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003108
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002786
+            }
+          ],
+          "output": "### Change\nIn `src/render-config.js`, the `maxLength` guard was a truthy check, so `0` was skipped.\n\nIt now uses `config.maxLength != null`, so `0` is rendered and a missing value is still omitted.\n\n### Regression\n`node --test test/config.test.js` — both tests pass.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: renders a numeric maxLength of zero\nok 1 - renders a numeric maxLength of zero\n  ---\n  duration_ms: 1.002598\n  type: 'test'\n  ...\n# Subtest: omits maxLength only when it is absent\nok 2 - omits maxLength only when it is absent\n  ---\n  duration_ms: 0.187996\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 96.242559\n"
+          },
+          "patchSha256": "8c20bcb42e28dd4ef384c2ee97893dafa7e4d90f47f884e9e5fd4bbd9be83ede",
+          "patchBytes": 433
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "config-numeric-attribute",
+      "policyId": "fixed:anthropic/claude-opus-4.6",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.057675,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "anthropic/claude-opus-4.6",
+          "calls": [
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.006085
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.010555
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01533
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01178
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.013925
+            }
+          ],
+          "output": "Both tests pass. The fix was changing `if (config.maxLength)` to `if (config.maxLength !== undefined)` so that the falsy numeric value `0` is still rendered as `maxlength=\"0\"`, while the attribute is omitted only when `maxLength` is truly absent from the config object.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: renders a numeric maxLength of zero\nok 1 - renders a numeric maxLength of zero\n  ---\n  duration_ms: 1.002703\n  type: 'test'\n  ...\n# Subtest: omits maxLength only when it is absent\nok 2 - omits maxLength only when it is absent\n  ---\n  duration_ms: 0.193448\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 82.186284\n"
+          },
+          "patchSha256": "9b27aeec6538db5d9bdf88bb1ad5a8b61fadfc9c98df3c50d55c45fd596d8e2f",
+          "patchBytes": 439
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "config-numeric-attribute",
+      "policyId": "fixed:qwen/qwen3-coder",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "unresolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0078253,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "qwen/qwen3-coder",
+          "calls": [
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001999
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002819
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001813
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003543
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003215
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002808
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003172
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003642
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003316
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003086
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005687
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004389
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005366
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004979
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0006489
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000585
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0007495
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0008585
+            }
+          ],
+          "output": "I've identified the exact issue and the fix needed, but I'm unable to apply the patch due to tool limitations. Let me clearly state what needs to be done:\n\nThe problem is in `src/render-config.js` on line 3. The condition `if (config.maxLength)` evaluates to `false` when `maxLength` is `0`, which causes the `maxlength` attribute to not be rendered even though it should be.\n\nThe fix is to change:\n```javascript\nif (config.maxLength) attributes.push(`maxlength=\"${config.maxLength}\"`);\n```\n\nto:\n```javascript\nif (config.maxLength !== undefined) attributes.push(`maxlength=\"${config.maxLength}\"`);\n```\n\nThis change will ensure that:\n1. When `maxLength` is `0`, the attribute is rendered as `maxlength=\"0\"`\n2. When `maxLength` is any other numeric value, it's rendered correctly\n3. When `maxLength` is absent (undefined), the attribute is omitted\n\nThis is the smallest local production-code change necessary to fix the issue. After this change, both tests should pass:\n- \"renders a numeric maxLength of zero\" - should render `<input maxlength=\"0\">`\n- \"omits maxLength only when it is absent\" - should render `<input >`\n\nSince I cannot apply the patch with the available tools, I'll have to leave it at this explanation of the exact fix needed.",
+          "test": {
+            "passed": false,
+            "output": "TAP version 13\n# Subtest: renders a numeric maxLength of zero\nnot ok 1 - renders a numeric maxLength of zero\n  ---\n  duration_ms: 1.997333\n  type: 'test'\n  location: '/home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/config-numeric-attribute/fixed%3Aqwen%2Fqwen3-coder/config-numeric-attribute/generic-one-model-72-turn/workspace/test/config.test.js:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + '<input >'\n    - '<input maxlength=\"0\">'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: '<input maxlength=\"0\">'\n  actual: '<input >'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/config-numeric-attribute/fixed%253Aqwen%252Fqwen3-coder/config-numeric-attribute/generic-one-model-72-turn/workspace/test/config.test.js:7:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: omits maxLength only when it is absent\nok 2 - omits maxLength only when it is absent\n  ---\n  duration_ms: 0.351842\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 1\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 285.029649\n\n"
+          },
+          "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "patchBytes": 0
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "config-numeric-attribute",
+      "policyId": "pareto:frozen-nine-rung",
+      "policy": "frozen-nine-rung-pareto",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.000820092,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "deepseek/deepseek-v4-flash",
+          "calls": [
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000066346
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001336944
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000207956
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001814148
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002306808
+            }
+          ],
+          "output": "Both tests pass. The fix was a one-character change in `src/render-config.js`: replacing `if (config.maxLength)` with `if (config.maxLength !== undefined)`. \n\nThe original condition used a truthy check, which excluded the numeric value `0` (since `0` is falsy in JavaScript). The new condition explicitly checks for `undefined`, so `maxlength=\"0\"` is rendered when `maxLength` is `0`, while the attribute is still omitted when `maxLength` is absent (i.e., `undefined`).",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: renders a numeric maxLength of zero\nok 1 - renders a numeric maxLength of zero\n  ---\n  duration_ms: 0.999392\n  type: 'test'\n  ...\n# Subtest: omits maxLength only when it is absent\nok 2 - omits maxLength only when it is absent\n  ---\n  duration_ms: 0.189877\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 85.171962\n"
+          },
+          "patchSha256": "9b27aeec6538db5d9bdf88bb1ad5a8b61fadfc9c98df3c50d55c45fd596d8e2f",
+          "patchBytes": 439
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "http-utf8-content-length",
+      "policyId": "fixed:openai/gpt-5.6-luna",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.017507949999999994,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "openai/gpt-5.6-luna",
+          "calls": [
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000658
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001387
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00251625
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0013122
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00131725
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00175645
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00135685
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00112325
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00122655
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00089425
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00215405
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00086635
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0009395
+            }
+          ],
+          "output": "Implemented the minimal production change to calculate `content-length` using UTF-8 byte length while preserving the original body and header shape.\n\nRegression passed:\n\n```text\nnode --test test/request.test.js\n```\n\nAll 2 tests passed.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: uses UTF-8 byte length for a non-ASCII body\nok 1 - uses UTF-8 byte length for a non-ASCII body\n  ---\n  duration_ms: 1.462501\n  type: 'test'\n  ...\n# Subtest: keeps the ASCII body length unchanged\nok 2 - keeps the ASCII body length unchanged\n  ---\n  duration_ms: 0.218429\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 87.508091\n"
+          },
+          "patchSha256": "84ea8b1b5e905949b8a9225c8088a6d41e7dfbffd7af5017fd4ba0bc0bf74426",
+          "patchBytes": 337
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "http-utf8-content-length",
+      "policyId": "fixed:x-ai/grok-4.5",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.024184,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "x-ai/grok-4.5",
+          "calls": [
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001412
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002642
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00432
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002384
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001944
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003026
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003712
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002238
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002506
+            }
+          ],
+          "output": "`createRequest` now sets `content-length` with `Buffer.byteLength(body, \"utf8\")` so multi-byte characters are counted correctly. Regression `node --test test/request.test.js` passes.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: uses UTF-8 byte length for a non-ASCII body\nok 1 - uses UTF-8 byte length for a non-ASCII body\n  ---\n  duration_ms: 1.027395\n  type: 'test'\n  ...\n# Subtest: keeps the ASCII body length unchanged\nok 2 - keeps the ASCII body length unchanged\n  ---\n  duration_ms: 0.209986\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 91.981893\n"
+          },
+          "patchSha256": "84ea8b1b5e905949b8a9225c8088a6d41e7dfbffd7af5017fd4ba0bc0bf74426",
+          "patchBytes": 337
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "http-utf8-content-length",
+      "policyId": "fixed:anthropic/claude-opus-4.6",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.05725499999999999,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "anthropic/claude-opus-4.6",
+          "calls": [
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00597
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0105
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01515
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01178
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.013855
+            }
+          ],
+          "output": "Both tests pass. The fix was straightforward: replace `body.length` (which counts JavaScript characters) with `Buffer.byteLength(body, \"utf-8\")` (which counts UTF-8 bytes). This correctly handles multi-byte characters like `€` (3 bytes in UTF-8).",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: uses UTF-8 byte length for a non-ASCII body\nok 1 - uses UTF-8 byte length for a non-ASCII body\n  ---\n  duration_ms: 1.234506\n  type: 'test'\n  ...\n# Subtest: keeps the ASCII body length unchanged\nok 2 - keeps the ASCII body length unchanged\n  ---\n  duration_ms: 0.210246\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 85.813363\n"
+          },
+          "patchSha256": "6fa755d5276a2b579c3b77efb5596d84233b3226b47b28a2d28d96bcdca77f58",
+          "patchBytes": 338
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "http-utf8-content-length",
+      "policyId": "fixed:qwen/qwen3-coder",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0022629000000000004,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "qwen/qwen3-coder",
+          "calls": [
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002354
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002908
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001861
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002833
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005346
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002734
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004593
+            }
+          ],
+          "output": "Perfect! The tests are now passing. Let me summarize what I did:\n\n1. **Problem**: The `createRequest(body)` function was using `body.length` which counts JavaScript characters, not UTF-8 bytes\n2. **Solution**: Changed `String(body.length)` to `String(Buffer.byteLength(body, 'utf8'))` to properly calculate the UTF-8 byte length\n3. **Verification**: The test now passes, confirming that:\n   - For \"price=€\" (7 characters, 9 UTF-8 bytes) it correctly returns \"9\"\n   - For ASCII strings like \"ok\" it still works correctly (2 characters = 2 bytes)\n\nThis is the minimal change needed to fix the issue while preserving the existing API and behavior for all cases.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: uses UTF-8 byte length for a non-ASCII body\nok 1 - uses UTF-8 byte length for a non-ASCII body\n  ---\n  duration_ms: 1.080162\n  type: 'test'\n  ...\n# Subtest: keeps the ASCII body length unchanged\nok 2 - keeps the ASCII body length unchanged\n  ---\n  duration_ms: 0.213995\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 90.015559\n"
+          },
+          "patchSha256": "a6eec58da3f1e279be4eda9d2231472295043b5c767c7f03ca2b56a47c48e772",
+          "patchBytes": 337
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "http-utf8-content-length",
+      "policyId": "pareto:frozen-nine-rung",
+      "policy": "frozen-nine-rung-pareto",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0016186102800000001,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "deepseek/deepseek-v4-flash",
+          "calls": [
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0000703248
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001360128
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002266236
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00013367508
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002348346
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000254541
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000283038
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002795604
+            }
+          ],
+          "output": "turn limit",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: uses UTF-8 byte length for a non-ASCII body\nok 1 - uses UTF-8 byte length for a non-ASCII body\n  ---\n  duration_ms: 1.059806\n  type: 'test'\n  ...\n# Subtest: keeps the ASCII body length unchanged\nok 2 - keeps the ASCII body length unchanged\n  ---\n  duration_ms: 0.190716\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 92.820333\n"
+          },
+          "patchSha256": "84ea8b1b5e905949b8a9225c8088a6d41e7dfbffd7af5017fd4ba0bc0bf74426",
+          "patchBytes": 337
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "url-query-repeat-empty-values",
+      "policyId": "fixed:openai/gpt-5.6-luna",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.015252100000000001,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "openai/gpt-5.6-luna",
+          "calls": [
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000717
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001107
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001562
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00222855
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0018528
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0017366
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0016736
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002561
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0008596
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00095395
+            }
+          ],
+          "output": "Implemented the minimal production change in `src/url.js`:\n\n- Array values now produce repeated query keys in order.\n- Empty strings are preserved as `key=`.\n- Scalar values continue to be encoded normally.\n\nRegression command passed:\n\n```text\nnode --test test/url.test.js\n```",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 1.140247\n  type: 'test'\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.244973\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 84.58488\n"
+          },
+          "patchSha256": "348cd8b32ebd6ab9aaeba357c9203e2638fc40510d101cf392ecca7bd5a707ca",
+          "patchBytes": 483
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "url-query-repeat-empty-values",
+      "policyId": "fixed:x-ai/grok-4.5",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.019878,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "x-ai/grok-4.5",
+          "calls": [
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001398
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003668
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003008
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003232
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003604
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002236
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.002732
+            }
+          ],
+          "output": "`buildUrl` now appends every array query value in order and keeps empty-string values as `key=`. Regression `node --test test/url.test.js` passes.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 1.147865\n  type: 'test'\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.219649\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 91.961452\n"
+          },
+          "patchSha256": "3904f7a043edb473b16ec9653e506a61281a9d75c215628b5521983dfa1b3e76",
+          "patchBytes": 502
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "url-query-repeat-empty-values",
+      "policyId": "fixed:anthropic/claude-opus-4.6",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.06682,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "anthropic/claude-opus-4.6",
+          "calls": [
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00606
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.011405
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01898
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01357
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.016805
+            }
+          ],
+          "output": "Both tests pass. The fix involved two changes:\n\n1. **Array values**: Instead of `params.set(key, value.at(-1))` (which only kept the last element), we now iterate over each element and use `params.append(key, v)` to produce repeated keys in order.\n2. **Empty string values**: Instead of `else if (value)` (which filtered out empty strings since `\"\"` is falsy), we now use `else` to allow all values including empty strings to be appended.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 1.115869\n  type: 'test'\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.221932\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 91.256105\n"
+          },
+          "patchSha256": "bf3ccf53eaa8b5f2be8b7367d9406cadf23aaac7818bf4afe800249a2e4ed30e",
+          "patchBytes": 477
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "url-query-repeat-empty-values",
+      "policyId": "fixed:qwen/qwen3-coder",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "unresolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.012162500000000001,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "qwen/qwen3-coder",
+          "calls": [
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001794
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002447
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0002282
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000495
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000454
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003042
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0003967
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00035
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004976
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005237
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004255
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005661
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000577
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0008024
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0005746
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0007792
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0007426
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0008692
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0011338
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0009578
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0010608
+            }
+          ],
+          "output": "The test is still failing as expected since I haven't been able to apply the fix. I've clearly identified the exact changes needed to fix the issue, but I'm unable to apply them due to persistent tooling problems.\n\nTo summarize what needs to be done:\n\n1. In `src/url.js`, the `buildUrl` function needs to be modified to:\n   - Handle arrays by looping through each item and calling `params.append(key, item)` for each one\n   - Handle non-array values by always calling `params.set(key, value)` even for empty strings\n\n2. This will make the test pass by correctly producing:\n   - `buildUrl(\"/search\", { tag: [\"node\", \"\"], q: \"\" })` returns `\"/search?tag=node&tag=&q=\"`\n\nThe issue is resolved in concept, but I cannot apply the actual fix due to tooling limitations.",
+          "test": {
+            "passed": false,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nnot ok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 2.073885\n  type: 'test'\n  location: '/home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/url-query-repeat-empty-values/fixed%3Aqwen%2Fqwen3-coder/url-query-repeat-empty-values/generic-one-model-72-turn/workspace/test/url.test.js:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + '/search?tag='\n    - '/search?tag=node&tag=&q='\n                   ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: '/search?tag=node&tag=&q='\n  actual: '/search?tag='\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/url-query-repeat-empty-values/fixed%253Aqwen%252Fqwen3-coder/url-query-repeat-empty-values/generic-one-model-72-turn/workspace/test/url.test.js:7:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.267246\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 1\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 95.308343\n\n"
+          },
+          "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "patchBytes": 0
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "url-query-repeat-empty-values",
+      "policyId": "pareto:frozen-nine-rung",
+      "policy": "frozen-nine-rung-pareto",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0021741608,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "deepseek/deepseek-v4-flash",
+          "calls": [
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0000660744
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001321488
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00019439784
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00013734588
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00010235736
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00015355536
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00020195196
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00040089
+            }
+          ],
+          "output": "turn limit",
+          "test": {
+            "passed": false,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nnot ok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 1.938503\n  type: 'test'\n  location: '/home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/url-query-repeat-empty-values/pareto%3Afrozen-nine-rung/url-query-repeat-empty-values/frozen-nine-rung-pareto/workspace/test/url.test.js:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + '/search?tag='\n    - '/search?tag=node&tag=&q='\n                   ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: '/search?tag=node&tag=&q='\n  actual: '/search?tag='\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/url-query-repeat-empty-values/pareto%253Afrozen-nine-rung/url-query-repeat-empty-values/frozen-nine-rung-pareto/workspace/test/url.test.js:7:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.26745\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 1\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 84.758748\n\n"
+          },
+          "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "patchBytes": 0
+        },
+        {
+          "attempt": 2,
+          "model": "xiaomi/mimo-v2.5",
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000175
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001315272
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001103368
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001130752
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001006096
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0000556864
+            },
+            {
+              "model": "xiaomi/mimo-v2.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000099204
+            }
+          ],
+          "output": "Both tests pass now. Here's what I fixed in `src/url.js`:\n\n1. **Array values**: Changed `params.set(key, value.at(-1))` → `for (const v of value) params.append(key, v)` — this repeats each array element as a separate query parameter instead of only keeping the last one.\n\n2. **Empty string values**: Changed `value` (truthy check) → `value != null` — this ensures empty strings `\"\"` are preserved as `key=` in the URL, while still skipping `null` and `undefined`.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: repeats array values and preserves empty query values\nok 1 - repeats array values and preserves empty query values\n  ---\n  duration_ms: 1.084248\n  type: 'test'\n  ...\n# Subtest: keeps ordinary scalar query values\nok 2 - keeps ordinary scalar query values\n  ---\n  duration_ms: 0.208935\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 86.95353\n"
+          },
+          "patchSha256": "580dc9cb5a73832a69d5cd39d27b54c62f43e118cd75a660f34fc1b8e216351a",
+          "patchBytes": 439
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "ndjson-chunk-framer",
+      "policyId": "fixed:openai/gpt-5.6-luna",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0137398,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "openai/gpt-5.6-luna",
+          "calls": [
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000648
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001144
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00187125
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00178935
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00112955
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00082255
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0012624
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0014216
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0020493
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00076455
+            },
+            {
+              "model": "openai/gpt-5.6-luna",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00083725
+            }
+          ],
+          "output": "Fixed `NdjsonFramer` to prepend the retained remainder to each incoming chunk before splitting into lines.\n\nRegression command passes:\n\n```text\nnode --test test/framer.test.js\n```",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: frames JSON records split across arbitrary chunks\nok 1 - frames JSON records split across arbitrary chunks\n  ---\n  duration_ms: 1.745775\n  type: 'test'\n  ...\n# Subtest: does not emit a final empty NDJSON line\nok 2 - does not emit a final empty NDJSON line\n  ---\n  duration_ms: 0.235428\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 86.045075\n"
+          },
+          "patchSha256": "8c19da12c5fee9724f375ef0f7542e508121c61270238739c4d8d37e0c19df77",
+          "patchBytes": 400
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "ndjson-chunk-framer",
+      "policyId": "fixed:x-ai/grok-4.5",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.011386,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "x-ai/grok-4.5",
+          "calls": [
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001254
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003304
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.003172
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001704
+            },
+            {
+              "model": "x-ai/grok-4.5",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.001952
+            }
+          ],
+          "output": "`NdjsonFramer.push` now prefixes each chunk with the retained incomplete line before splitting, so JSON split across chunks is framed correctly. Both regression tests pass.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: frames JSON records split across arbitrary chunks\nok 1 - frames JSON records split across arbitrary chunks\n  ---\n  duration_ms: 1.744042\n  type: 'test'\n  ...\n# Subtest: does not emit a final empty NDJSON line\nok 2 - does not emit a final empty NDJSON line\n  ---\n  duration_ms: 0.236498\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 84.538561\n"
+          },
+          "patchSha256": "8c19da12c5fee9724f375ef0f7542e508121c61270238739c4d8d37e0c19df77",
+          "patchBytes": 400
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "ndjson-chunk-framer",
+      "policyId": "fixed:anthropic/claude-opus-4.6",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.08379,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "anthropic/claude-opus-4.6",
+          "calls": [
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.006125
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01062
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.01888
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.016865
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.014655
+            },
+            {
+              "model": "anthropic/claude-opus-4.6",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.016645
+            }
+          ],
+          "output": "Both tests pass. The fix was a single line: prepending `this.#remainder` to the first element of the split lines before processing. This ensures that when a JSON object is split across chunks, the leftover from the previous `push()` call is correctly joined with the beginning of the next chunk.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: frames JSON records split across arbitrary chunks\nok 1 - frames JSON records split across arbitrary chunks\n  ---\n  duration_ms: 1.691339\n  type: 'test'\n  ...\n# Subtest: does not emit a final empty NDJSON line\nok 2 - does not emit a final empty NDJSON line\n  ---\n  duration_ms: 0.224768\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 82.653842\n"
+          },
+          "patchSha256": "c9b19c90789d0a57d770002ab696adabe360cd7877654f27ed9b56924cefc372",
+          "patchBytes": 366
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "ndjson-chunk-framer",
+      "policyId": "fixed:qwen/qwen3-coder",
+      "policy": "generic-one-model-72-turn",
+      "outcome": "unresolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.07370542000000001,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "qwen/qwen3-coder",
+          "calls": [
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00030264
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00035413
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00063352
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0010277
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00112703
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00100922
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00100959
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00115966
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00136073
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00149274
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00141421
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00165953
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00193645
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00176701
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00211992
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00217263
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00240758
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00244546
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00254062
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00264368
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00302969
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0027878
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00291254
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00293615
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00339575
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00353627
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00363099
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00377122
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00399427
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00430171
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00404648
+            },
+            {
+              "model": "qwen/qwen3-coder",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0047785
+            }
+          ],
+          "output": "The test is still failing as expected. The issue is clear and the fix is well-defined. Since I cannot apply the patch due to tool limitations, I'll clearly state what needs to be done:\n\n## Fix Summary\n\nThe issue is in `src/framer.js` in the `NdjsonFramer.push()` method. The current implementation doesn't handle JSON objects that are split across chunks.\n\n**Current broken code:**\n```javascript\npush(chunk) {\n  const lines = chunk.split(\"\\n\");\n  this.#remainder = lines.pop();\n  return lines.filter(Boolean).map((line) => JSON.parse(line));\n}\n```\n\n**Required fix:**\n```javascript\npush(chunk) {\n  const combined = this.#remainder + chunk;\n  const lines = combined.split(\"\\n\");\n  this.#remainder = lines.pop() || \"\";\n  return lines.filter(Boolean).map((line) => JSON.parse(line));\n}\n```\n\n**Explanation:**\n1. Instead of processing just the new chunk, we first combine it with any remainder from previous calls\n2. We split this combined string by newlines\n3. The last element becomes the new remainder (using `|| \"\"` to handle empty cases)\n4. All other elements get parsed as JSON objects\n\nThis ensures that when we receive `{\"id\":1}\\n{\"id\":` in one chunk and `2}\\n` in the next, the incomplete `{\"id\":` is buffered and combined with `2}\\n` to form `{\"id\":2}` which can then be properly parsed.\n\nThe second test for ignoring final empty lines will also pass with this implementation because `filter(Boolean)` removes empty strings from the lines array.",
+          "test": {
+            "passed": false,
+            "output": "TAP version 13\n# Subtest: frames JSON records split across arbitrary chunks\nnot ok 1 - frames JSON records split across arbitrary chunks\n  ---\n  duration_ms: 1.73785\n  type: 'test'\n  location: '/home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/ndjson-chunk-framer/fixed%3Aqwen%2Fqwen3-coder/ndjson-chunk-framer/generic-one-model-72-turn/workspace/test/framer.test.js:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Unexpected non-whitespace character after JSON at position 1 (line 1 column 2)'\n  code: 'ERR_TEST_FAILURE'\n  name: 'SyntaxError'\n  stack: |-\n    JSON.parse (<anonymous>)\n    file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/ndjson-chunk-framer/fixed%253Aqwen%252Fqwen3-coder/ndjson-chunk-framer/generic-one-model-72-turn/workspace/src/framer.js:7:53\n    Array.map (<anonymous>)\n    NdjsonFramer.push (file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/ndjson-chunk-framer/fixed%253Aqwen%252Fqwen3-coder/ndjson-chunk-framer/generic-one-model-72-turn/workspace/src/framer.js:7:34)\n    TestContext.<anonymous> (file:///home/ubuntu/code/pareto-curve-agent-harness/runs/lite-model-matrix-001/tasks/ndjson-chunk-framer/fixed%253Aqwen%252Fqwen3-coder/ndjson-chunk-framer/generic-one-model-72-turn/workspace/test/framer.test.js:10:27)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: does not emit a final empty NDJSON line\nok 2 - does not emit a final empty NDJSON line\n  ---\n  duration_ms: 0.276724\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 1\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 91.151205\n\n"
+          },
+          "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "patchBytes": 0
+        }
+      ],
+      "resumed": false
+    },
+    {
+      "taskId": "ndjson-chunk-framer",
+      "policyId": "pareto:frozen-nine-rung",
+      "policy": "frozen-nine-rung-pareto",
+      "outcome": "resolved",
+      "costAccountingComplete": true,
+      "actualCostUsd": 0.0020605284,
+      "attempts": [
+        {
+          "attempt": 1,
+          "model": "deepseek/deepseek-v4-flash",
+          "calls": [
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0000492156
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0001234016
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000512834
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.0004368252
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.00044541
+            },
+            {
+              "model": "deepseek/deepseek-v4-flash",
+              "costAccountingComplete": true,
+              "actualCostUsd": 0.000492842
+            }
+          ],
+          "output": "Both tests pass. The fix was a one-line change: prepend `this.#remainder` to the incoming `chunk` before splitting on newlines. This ensures that when a JSON object is split across chunk boundaries (e.g., `'{\"id\":'` in one chunk, `'2}\\n'` in the next), the stored remainder is combined with the next chunk to form a complete, parseable JSON line.",
+          "test": {
+            "passed": true,
+            "output": "TAP version 13\n# Subtest: frames JSON records split across arbitrary chunks\nok 1 - frames JSON records split across arbitrary chunks\n  ---\n  duration_ms: 1.818867\n  type: 'test'\n  ...\n# Subtest: does not emit a final empty NDJSON line\nok 2 - does not emit a final empty NDJSON line\n  ---\n  duration_ms: 0.251966\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 93.836722\n"
+          },
+          "patchSha256": "aff4a61bb03be4ad55e43f2d64e4746ff33a50353cc1378dcd36af581cb67d7e",
+          "patchBytes": 430
+        }
+      ],
+      "resumed": false
+    }
+  ],
+  "summaries": {
+    "fixed:openai/gpt-5.6-luna": {
+      "taskCount": 4,
+      "resolved": 4,
+      "completeCostRows": 4,
+      "actualCostUsd": 0.052747899999999986
+    },
+    "fixed:x-ai/grok-4.5": {
+      "taskCount": 4,
+      "resolved": 4,
+      "completeCostRows": 4,
+      "actualCostUsd": 0.07625600000000002
+    },
+    "fixed:anthropic/claude-opus-4.6": {
+      "taskCount": 4,
+      "resolved": 4,
+      "completeCostRows": 4,
+      "actualCostUsd": 0.26554
+    },
+    "fixed:qwen/qwen3-coder": {
+      "taskCount": 4,
+      "resolved": 1,
+      "completeCostRows": 4,
+      "actualCostUsd": 0.09595612
+    },
+    "pareto:frozen-nine-rung": {
+      "taskCount": 4,
+      "resolved": 4,
+      "completeCostRows": 4,
+      "actualCostUsd": 0.00667339148
+    }
+  }
+}

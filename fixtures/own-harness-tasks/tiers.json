@@ -14,23 +14,20 @@
     "lite": {
       "taskIds": [
         "config-numeric-attribute",
-        "retry-cancellation-backoff",
-        "safe-relative-atomic-writer",
         "http-utf8-content-length",
         "url-query-repeat-empty-values",
-        "cli-options-double-dash",
         "ndjson-chunk-framer"
       ]
     },
     "full": {
       "taskIds": [
         "config-numeric-attribute",
-        "retry-cancellation-backoff",
-        "safe-relative-atomic-writer",
         "http-utf8-content-length",
         "url-query-repeat-empty-values",
-        "cli-options-double-dash",
         "ndjson-chunk-framer",
+        "retry-cancellation-backoff",
+        "safe-relative-atomic-writer",
+        "cli-options-double-dash",
         "bounded-async-pool-order",
         "http-range-single-byte",
         "content-type-quoted-parameters",

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "owned-node-suite/v1",
+  "createdAt": "2026-07-17T21:09:51.189Z",
+  "scope": {
+    "tier": "lite",
+    "taskIds": [
+      "config-numeric-attribute",
+      "http-utf8-content-length",
+      "url-query-repeat-empty-values",
+      "ndjson-chunk-framer"
+    ],
+    "fixtureManifestSha256": "fa8abfe546ea08370fc709d3a8a231ffa2cbd5e25606b67e6f46c71cb064a3a9",
+    "tiersManifestSha256": "be6a3d04c4f3a2d2838f2e589c4228ad5cb17955552f64785f17a365631a3285"
+  },
+  "policies": [
+    {
+      "id": "fixed:openai/gpt-5.6-luna",
+      "model": "openai/gpt-5.6-luna",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:x-ai/grok-4.5",
+      "model": "x-ai/grok-4.5",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:anthropic/claude-opus-4.6",
+      "model": "anthropic/claude-opus-4.6",
+      "kind": "fixed"
+    },
+    {
+      "id": "fixed:qwen/qwen3-coder",
+      "model": "qwen/qwen3-coder",
+      "kind": "fixed"
+    },
+    {
+      "id": "pareto:frozen-nine-rung",
+      "kind": "pareto"
+    }
+  ],
+  "genericTurns": 72,
+  "taskCostCapUsd": 9,
+  "totalCostCapUsd": 75,
+  "node": "v22.23.1",
+  "dryRun": false
+}
