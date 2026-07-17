@@ -106,6 +106,45 @@ docker build -f Dockerfile.task-sandbox -t pareto-task-sandbox:latest .
 
 A task runner must arrange for its worker to execute inside the workspace identified by `WorkspaceInfo.workingDirectory`; this package deliberately does not embed a coding-provider API or task sandbox command.
 
+## Owned Node model-matrix study
+
+The repository also contains a self-contained, dependency-free Node repair suite under [`fixtures/own-harness-tasks/`](fixtures/own-harness-tasks/). It is a directional cost-and-resolution study, not a public benchmark or leaderboard score: every fixture is owned by this repository and uses an exact focused `node --test` regression.
+
+The hash-bound tiers are:
+
+- `single` — one smoke fixture;
+- `lite` — four fast cost-comparison fixtures;
+- `full` — all 13 owned fixtures.
+
+Run a reproducible fixed-model matrix and the immutable Pareto policy end to end:
+
+```bash
+node scripts/run-owned-node-suite.mjs \
+  --tier full \
+  --models openai/gpt-5.6-luna,x-ai/grok-4.5,anthropic/claude-opus-4.6,qwen/qwen3-coder \
+  --generic-turns 72 \
+  --include-pareto \
+  --max-task-cost-usd 9 \
+  --max-total-cost-usd 75 \
+  --output-dir runs/full-model-matrix-001
+```
+
+The runner validates the selected tier and its bound fixture-manifest hash before dispatch, uses fresh workspaces, requires authoritative OpenRouter `usage.cost`, and writes a run manifest plus Markdown, CSV, and JSON results. Fixed-model policies receive one continuous session of up to 72 model-response/tool-loop turns **per task**; Pareto retains its frozen nine-rung policy with up to eight turns per rung. Policies stop early after a passing deterministic regression, so actual turns and cost vary by task.
+
+### Full-tier result — 2026-07-17
+
+![Full-tier actual provider cost and resolution](reports/full-model-matrix-001/cost-chart.svg)
+
+| Policy | Resolved | Actual provider cost |
+|---|---:|---:|
+| GPT-5.6 Luna — one 72-turn session | 12 / 13 | $0.797856 |
+| Grok 4.5 — one 72-turn session | 13 / 13 | $1.368134 |
+| Claude Opus 4.6 — one 72-turn session | 13 / 13 | $5.971770 |
+| Qwen3 Coder — one 72-turn session | 6 / 13 | $1.164105 |
+| Frozen Pareto | 13 / 13 | $0.106386 |
+
+All 65 task-policy rows had complete provider-reported cost. The full report, chart source, CSV, JSON, and hash-bound run manifest are available in [`reports/full-model-matrix-001/`](reports/full-model-matrix-001/). These results are a single directional run on deliberately owned fixtures; they should not be generalized into claims about all coding tasks or model quality.
+
 ## Issues and project tracking
 
 [GitHub Issues](https://github.com/frosty-agent/pareto-curve-agent-harness/issues) is the canonical tracker for this repository. Please open new bugs, feature requests, and implementation work there.
