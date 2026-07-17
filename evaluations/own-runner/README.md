@@ -47,9 +47,9 @@ user: <record.problem_statement>
 
 Expose the exact same constrained tools to both policies:
 
-- `read_file(path)`, `list_files(path)`, `apply_patch(diff)`, and `run_command(command)`;
-- `run_command` accepts only a task-derived allowlist: the public regression command plus narrowly needed repository status/diff and declared build/test commands;
-- no unrestricted shell, credentials, or network access inside the task container.
+- `read_file(path)`, `list_files(path)`, and `apply_patch(diff)` run only against the host-owned testbed; `run_command(command)` accepts only the one task-derived public regression command;
+- the regression runs with Docker argv (no shell) in the bootstrap-recorded immutable `sha256:` SWE-bench image, bind-mounted at `/testbed` with network disabled; each result records a bounded combined output, exit status, and timeout state;
+- no unrestricted shell, credentials, or network access is exposed to either policy;
 
 Derive the regression command deterministically from the public record: parse `FAIL_TO_PASS` as its JSON list and execute the project test runner's listed node IDs after `test_patch` is applied. Store the exact command, exit code, and bounded stdout/stderr in `public-test.json`. Also run the public `PASS_TO_PASS` list when it is available and time permits, but keep it distinct from the primary regression verdict.
 

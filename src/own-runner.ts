@@ -4,6 +4,7 @@ import { join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 
 import { FROZEN_PARETO_LADDER_IDS } from "./benchmark-manifest.js";
+import type { DockerTestRuntime } from "./docker-test-runtime.js";
 import type { ToolCall, ToolExecutionResult } from "./openrouter-agent-runner.js";
 
 const execFileAsync = promisify(execFile);
@@ -55,6 +56,9 @@ function parseSelectors(value: string): string[] {
   return selectors as string[];
 }
 
+const TESTBED_PYTHON = "/opt/miniconda3/envs/testbed/bin/python";
+const TESTBED_PYTEST = "/opt/miniconda3/envs/testbed/bin/pytest";
+
 /** Converts the public task's FAIL_TO_PASS metadata to an exact no-shell argv. */
 export function derivePublicRegressionCommand(record: OwnRunnerTaskRecord): CommandSpec {
   const selectors = parseSelectors(record.FAIL_TO_PASS);
@@ -64,9 +68,10 @@ export function derivePublicRegressionCommand(record: OwnRunnerTaskRecord): Comm
       if (!match) throw new Error(`unsupported Django selector: ${selector}`);
       return `${match[2]}.${match[1]}`;
     });
-    return { command: `python tests/runtests.py ${labels.join(" ")}`, argv: ["python", "tests/runtests.py", ...labels] };
+    return { command: `${TESTBED_PYTHON} tests/runtests.py ${labels.join(" ")}`, argv: [TESTBED_PYTHON, "tests/runtests.py", ...labels] };
   }
-  if (record.instance_id.startsWith("sphinx-doc__sphinx-")) return { command: `python -m pytest ${selectors.join(" ")}`, argv: ["python", "-m", "pytest", ...selectors] };
+  if (record.instance_id.startsWith("sphinx-doc__sphinx-")) return { command: `${TESTBED_PYTHON} -m pytest ${selectors.join(" ")}`, argv: [TESTBED_PYTHON, "-m", "pytest", ...selectors] };
+  if (record.instance_id.startsWith("pallets__flask-") || record.instance_id.startsWith("psf__requests-")) return { command: `${TESTBED_PYTEST} -rA ${selectors.join(" ")}`, argv: [TESTBED_PYTEST, "-rA", ...selectors] };
   throw new Error(`no deterministic regression command mapping for ${record.instance_id}`);
 }
 
@@ -79,12 +84,14 @@ function safePath(workspace: string, requested: string): string {
 
 function bounded(text: string, limit = 32_000): string { return text.length <= limit ? text : `${text.slice(0, limit)}\n[output truncated]`; }
 
+function sameRegression(left: CommandSpec, right: DockerTestRuntime["regression"]): boolean {
+  return left.command === right.command && left.argv.length === right.argv.length && left.argv.every((arg, index) => arg === right.argv[index]);
+}
+
 /** Creates the identical four-tool contract used by both own-runner policies. */
-export function createOwnRunnerTools(workspace: string, regression: CommandSpec, maxToolExecutions = 36): OwnRunnerTools {
+export function createOwnRunnerTools(workspace: string, regression: CommandSpec, maxToolExecutions = 36, testRuntime?: DockerTestRuntime): OwnRunnerTools {
   const allowed = new Map<string, CommandSpec>([
     [regression.command, regression],
-    ["git diff", { command: "git diff", argv: ["git", "diff"] }],
-    ["git status --short", { command: "git status --short", argv: ["git", "status", "--short"] }],
   ]);
   let remaining = maxToolExecutions;
   const schema = [
@@ -115,8 +122,11 @@ export function createOwnRunnerTools(workspace: string, regression: CommandSpec,
         if (call.function.name === "run_command") {
           const command = requireText(args.command, "command"); const spec = allowed.get(command);
           if (!spec) return { content: "Command is not allowlisted", isError: true };
-          try { const result = await execFileAsync(spec.argv[0]!, spec.argv.slice(1), { cwd: workspace, signal, timeout: 120_000 }); return { content: bounded(`${result.stdout}\n${result.stderr}`) }; }
-          catch (error: unknown) { const output = error as { stdout?: string; stderr?: string; message?: string }; return { content: bounded(`${output.stdout ?? ""}\n${output.stderr ?? output.message ?? "command failed"}`), isError: true }; }
+          if (!testRuntime) return { content: "Docker test runtime is required", isError: true };
+          if (!sameRegression(regression, testRuntime.regression)) return { content: "Docker test runtime does not match allowed regression", isError: true };
+          const result = await testRuntime.run(signal);
+          if (result.timedOut) return { content: "Command timed out", isError: true };
+          return result.exitCode === 0 ? { content: result.output } : { content: result.output || "command failed", isError: true };
         }
         return { content: `Unknown tool ${call.function.name}`, isError: true };
       } catch (error) { return { content: error instanceof Error ? error.message : String(error), isError: true }; }
