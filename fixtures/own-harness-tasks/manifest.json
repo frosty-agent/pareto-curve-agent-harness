@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "pareto-owned-node-fixtures/v1",
+  "description": "Self-contained Node repair fixtures. Baselines are intentionally failing; candidates must run the exact argv in a fresh copied workspace.",
+  "tasks": [
+    {
+      "id": "config-numeric-attribute",
+      "workspace": "config-numeric-attribute",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/config.test.js",
+        "argv": ["node", "--test", "test/config.test.js"]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "72187e96254817f33f7e116682a90ff618d7407f28bec32ff32ab65edc0823a2",
+        "files": ["package.json", "src/render-config.js", "test/config.test.js"]
+      }
+    },
+    {
+      "id": "retry-cancellation-backoff",
+      "workspace": "retry-cancellation-backoff",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/retry.test.js",
+        "argv": ["node", "--test", "test/retry.test.js"]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "14a98c4de3837373eb145cd80e65eaa7cd282838155037a7bf25ad85ff78e61d",
+        "files": ["package.json", "src/retry.js", "test/retry.test.js"]
+      }
+    },
+    {
+      "id": "safe-relative-atomic-writer",
+      "workspace": "safe-relative-atomic-writer",
+      "promptFile": "TASK.md",
+      "regression": {
+        "command": "node --test test/writer.test.js",
+        "argv": ["node", "--test", "test/writer.test.js"]
+      },
+      "baseline": {
+        "status": "expected_regression_failure",
+        "sha256": "9e149af947b4cd561410dc45388e4f3b66f73346b45fd47910490ef7550b2a5e",
+        "files": ["package.json", "src/writer.js", "test/writer.test.js"]
+      }
+    }
+  ]
+}

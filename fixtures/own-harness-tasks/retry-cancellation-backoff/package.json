@@ -1,0 +1,8 @@
+{
+  "name": "fixture-retry-cancellation-backoff",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/retry.test.js"
+  }
+}

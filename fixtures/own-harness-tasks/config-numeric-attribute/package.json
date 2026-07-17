@@ -1,0 +1,8 @@
+{
+  "name": "fixture-config-numeric-attribute",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/config.test.js"
+  }
+}

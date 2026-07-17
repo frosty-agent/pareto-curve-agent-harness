@@ -1,0 +1,8 @@
+{
+  "name": "fixture-safe-relative-atomic-writer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:regression": "node --test test/writer.test.js"
+  }
+}
