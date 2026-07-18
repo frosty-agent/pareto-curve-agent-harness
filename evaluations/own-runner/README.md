@@ -1,4 +1,6 @@
-# Lightweight SWE-bench Verified comparison (own runner)
+# Archived Docker/SWE-bench-derived own-runner notes
+
+> **Historical only.** This document describes an earlier Docker/Python/SWE-bench-derived experiment. It is not the current owned Node matrix workflow and must not be combined with the results in [`../../reports/full-model-matrix-001/`](../../reports/full-model-matrix-001/) or described as an official SWE-bench result. For the current workflow, see [`../../docs/README.md`](../../docs/README.md).
 
 This is a **1–3 task directional benchmark**, not a SWE-bench leaderboard submission. It avoids Claw and does not invoke the official SWE-bench harness. It uses public SWE-bench Verified records and the corresponding prepared instance images only; the evaluator is a public regression command taken from each instance's `FAIL_TO_PASS` field.
 

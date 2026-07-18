@@ -1,122 +1,47 @@
 # Pareto Curve Agent Harness
 
-A Dockerized TypeScript CLI that derives an explicit, observable coding-capability vs. expected-cost ladder from the [OpenRouter Models API](https://openrouter.ai/api/v1/models).
+A small research harness for comparing **coding-agent policies** by deterministic task outcome and actual provider cost.
 
-It uses OpenRouter's concrete executable model IDs, token pricing, and embedded Artificial Analysis benchmark scores. It does **not** scrape the OpenRouter Pareto Router UI.
+The current study uses owned, dependency-free Node repair fixtures. It is **directional evidence**, not a public leaderboard or a claim about all software-engineering tasks.
 
-## Output
+## How the policies differ
 
-The CLI writes JSON containing up to 10 models by default. Every model contains:
+Both policies receive the same fixture baseline, task prompt, bounded tools, deterministic `node --test` regression, fresh workspace, and OpenRouter cost accounting. The policy—not the task contract—is what changes.
 
-- `codingIndex`, `intelligenceIndex`, and `agenticIndex`
-- expected cost for the supplied input/output token mix
-- input/output price per million tokens
-- explicit image/video input/output capability booleans
-- `isParetoOptimal`, distinguishing the strict cost-vs-coding frontier from dominated fill models
+| Policy | Execution strategy |
+|---|---|
+| **Generic fixed-model harness** | Uses one selected model in a single continuous session of up to **72 model-response/tool-loop turns per task**. It stops early when the regression passes. |
+| **Frozen Pareto ladder** | Tries the recorded nine-model order. Each rung gets up to **8 turns**; a failed rung is reset to the original baseline and the next rung receives bounded regression feedback. It has up to **72 turns per task** across the ladder and also stops early on a passing regression. |
 
-## Run with Docker
+The maximum per-task response envelope is therefore the same, but the trajectories are deliberately different: generic maintains one long context; Pareto uses bounded, resettable escalation across models.
 
-Build the image:
+## Full cost study
 
-```bash
-docker build -t pareto-curve-agent-harness .
-```
+The latest full run evaluated 13 owned fixtures across four fixed models and the frozen Pareto policy. All 65 task-policy rows had complete provider-reported `usage.cost`.
 
-The public catalog can be read without auth:
+![Full-tier actual provider cost and resolution](reports/full-model-matrix-001/cost-chart.svg)
 
-```bash
-docker run --rm pareto-curve-agent-harness \
-  --input-tokens 10000 --output-tokens 2000 --limit 10 --exclude-preview
-```
+| Policy | Resolved | Actual provider cost |
+|---|---:|---:|
+| GPT-5.6 Luna — one 72-turn session | 12 / 13 | $0.797856 |
+| Grok 4.5 — one 72-turn session | 13 / 13 | $1.368134 |
+| Claude Opus 4.6 — one 72-turn session | 13 / 13 | $5.971770 |
+| Qwen3 Coder — one 72-turn session | 6 / 13 | $1.164105 |
+| Frozen Pareto | 13 / 13 | $0.106386 |
 
-To pass the OpenRouter key from AWS Secrets Manager without storing it in the image or repository:
+On this single owned-fixture run, Pareto matched the strongest fixed-model resolution result at the lowest actual cost. That is a policy result for this suite—not a general model ranking.
 
-Retrieve `SecretString` from AWS Secrets Manager for `pareto-curve-openrouter-api-key`, export it into `OPENROUTER_API_KEY` in your shell, then run:
+The complete evidence is checked in:
 
-```bash
-docker run --rm -e OPENROUTER_API_KEY pareto-curve-agent-harness \
-  --input-tokens 10000 --output-tokens 2000 --limit 10 --exclude-preview
-```
+- [full report](reports/full-model-matrix-001/REPORT.md)
+- [cost chart](reports/full-model-matrix-001/cost-chart.svg)
+- [CSV rows](reports/full-model-matrix-001/results.csv)
+- [JSON rows](reports/full-model-matrix-001/results.json)
+- [hash-bound run manifest](reports/full-model-matrix-001/run-manifest.json)
 
-Unset `OPENROUTER_API_KEY` after the run.
+## Run the current suite
 
-The key is optional for the catalog endpoint. When supplied, the CLI sends it only as an OpenRouter authorization header and reports `authConfigured: true`; it never prints the key.
-
-## Run a coding task ladder
-
-Build the dedicated runner image:
-
-```bash
-docker build -f Dockerfile.runner -t pareto-runner:latest .
-```
-
-Run a prompt against a target Git repository. Docker and a reachable Docker daemon are required; the wrapper checks both before starting. Export `OPENROUTER_API_KEY` in your shell (or retrieve it from your secret manager) first:
-
-```bash
-export OPENROUTER_API_KEY="…"
-scripts/run-ladder.sh \
-  --prompt 'Implement the requested feature and run the project checks.' \
-  --source /path/to/target-repository \
-  --reports /tmp/pareto-reports
-```
-
-The target source is bind-mounted read-only at `/source`; reports (JSON, HTML, and retry patches) are written to `--reports`. The runner emits progress lines for each ladder invocation, including attempt number, model ID, and whether it is a worker or judge.
-
-By default, task work occurs in the runner's disposable `/workspace`. To retain or inspect the isolated cloned workspace on the host, provide an explicit workspace volume:
-
-```bash
-scripts/run-ladder.sh --prompt '…' --source /path/to/target-repository \
-  --workspace /tmp/pareto-workspace --reports /tmp/pareto-reports
-```
-
-Run `scripts/run-ladder.sh --help` for all options.
-
-## Policy controls
-
-```bash
-# Limit providers and require tool-calling support
-docker run --rm pareto-curve-agent-harness \
-  --allow-provider openai,anthropic,google \
-  --require-tools \
-  --exclude-preview
-```
-
-Models must have an AA Coding Index to be eligible. The program removes dominated models—models for which another eligible model is at least as capable and no more expensive—then orders the frontier from lower to higher Coding Index. If the strict frontier has fewer than `--limit` models, dominated models are appended and marked `isParetoOptimal: false`.
-
-## Pareto task ladder primitive
-
-`ParetoTaskLadder` owns deterministic worker escalation; callers provide provider-specific `TaskWorker` and `TaskJudge` adapters. It always chooses the first supplied ladder model for the worker and the model with the highest `intelligenceIndex` for judgment. A worker-reported success is still judged.
-
-`DockerGitWorkspace` isolates task work from the repository that invoked it, while `DockerCommandWorker` executes every coding worker attempt in a separately constrained Docker container. The judge remains an adapter supplied by the caller.
-
-`DockerGitWorkspace`:
-
-1. It reads and records the source repository `HEAD` SHA.
-2. It asks a disposable Docker container running as the invoking host UID/GID to clone that exact SHA into a host-temporary mounted directory. The clone is already an initialized Git repository.
-3. After an unsuccessful judgment, it writes `attempt-N.patch` to a sibling temporary artifacts directory, hard-resets to the recorded baseline commit, and cleans untracked/ignored files before the next model runs.
-4. Cleanup deletes the temporary workspace at the end of a run. The original working tree is read-only to the sandbox and is never reset or modified.
-
-`DockerCommandWorker` mounts only that isolated workspace, drops Linux capabilities, enables `no-new-privileges`, limits process count, makes the container filesystem read-only apart from an in-memory `/tmp`, and disables network access by default. Set its `network` option to `bridge` explicitly only for a worker that needs an API connection. Its command receives JSON task context in `PARETO_TASK_CONTEXT` and must write one JSON `WorkerResult` object to stdout.
-
-Build the sandbox image before constructing a `DockerGitWorkspace`:
-
-```bash
-docker build -f Dockerfile.task-sandbox -t pareto-task-sandbox:latest .
-```
-
-A task runner must arrange for its worker to execute inside the workspace identified by `WorkspaceInfo.workingDirectory`; this package deliberately does not embed a coding-provider API or task sandbox command.
-
-## Owned Node model-matrix study
-
-The repository also contains a self-contained, dependency-free Node repair suite under [`fixtures/own-harness-tasks/`](fixtures/own-harness-tasks/). It is a directional cost-and-resolution study, not a public benchmark or leaderboard score: every fixture is owned by this repository and uses an exact focused `node --test` regression.
-
-The hash-bound tiers are:
-
-- `single` — one smoke fixture;
-- `lite` — four fast cost-comparison fixtures;
-- `full` — all 13 owned fixtures.
-
-Run a reproducible fixed-model matrix and the immutable Pareto policy end to end:
+The owned fixture tiers are `single` (1 task), `lite` (4 fast tasks), and `full` (13 tasks). A dry run validates tier/fixture hashes without provider calls.
 
 ```bash
 node scripts/run-owned-node-suite.mjs \
@@ -129,39 +54,4 @@ node scripts/run-owned-node-suite.mjs \
   --output-dir runs/full-model-matrix-001
 ```
 
-The runner validates the selected tier and its bound fixture-manifest hash before dispatch, uses fresh workspaces, requires authoritative OpenRouter `usage.cost`, and writes a run manifest plus Markdown, CSV, and JSON results. Fixed-model policies receive one continuous session of up to 72 model-response/tool-loop turns **per task**; Pareto retains its frozen nine-rung policy with up to eight turns per rung. Policies stop early after a passing deterministic regression, so actual turns and cost vary by task.
-
-### Full-tier result — 2026-07-17
-
-![Full-tier actual provider cost and resolution](reports/full-model-matrix-001/cost-chart.svg)
-
-| Policy | Resolved | Actual provider cost |
-|---|---:|---:|
-| GPT-5.6 Luna — one 72-turn session | 12 / 13 | $0.797856 |
-| Grok 4.5 — one 72-turn session | 13 / 13 | $1.368134 |
-| Claude Opus 4.6 — one 72-turn session | 13 / 13 | $5.971770 |
-| Qwen3 Coder — one 72-turn session | 6 / 13 | $1.164105 |
-| Frozen Pareto | 13 / 13 | $0.106386 |
-
-All 65 task-policy rows had complete provider-reported cost. The full report, chart source, CSV, JSON, and hash-bound run manifest are available in [`reports/full-model-matrix-001/`](reports/full-model-matrix-001/). These results are a single directional run on deliberately owned fixtures; they should not be generalized into claims about all coding tasks or model quality.
-
-## Issues and project tracking
-
-[GitHub Issues](https://github.com/frosty-agent/pareto-curve-agent-harness/issues) is the canonical tracker for this repository. Please open new bugs, feature requests, and implementation work there.
-
-The unfinished work was migrated from the former Linear project on July 14, 2026:
-
-- [#1 — Capture session, hooks, MCP, and tool trace in reports](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/1) (from `AGE-10`)
-- [#2 — Adopt fork as Docker coding-worker runtime](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/2) (from `AGE-9`)
-- [#3 — Run and evaluate OpenRouter Pareto agent ladder end-to-end](https://github.com/frosty-agent/pareto-curve-agent-harness/issues/3) (from `AGE-11`)
-
-Each migrated issue links back to its Linear source for historical context. GitHub is authoritative for status and discussion going forward.
-
-## Development
-
-```bash
-npm install
-npm test
-npm run build
-npm run start -- --limit 10
-```
+See [documentation](docs/README.md) for command details, artifact contracts, the catalog CLI, legacy Docker ladder notes, and development instructions.
