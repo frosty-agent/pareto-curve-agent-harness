@@ -39,19 +39,20 @@ The complete evidence is checked in:
 - [JSON rows](reports/full-model-matrix-001/results.json)
 - [hash-bound run manifest](reports/full-model-matrix-001/run-manifest.json)
 
-## Run the current suite
+## Validate or run the current suite
 
-The owned fixture tiers are `single` (1 task), `lite` (4 fast tasks), and `full` (13 tasks). A dry run validates tier/fixture hashes without provider calls.
+The owned fixture tiers are `single` (1 task), `lite` (4 fast tasks), and `full` (13 tasks). Start with a no-cost validation run; the output directory must be new unless you use `--resume` with the exact same run manifest.
 
 ```bash
 node scripts/run-owned-node-suite.mjs \
-  --tier full \
-  --models openai/gpt-5.6-luna,x-ai/grok-4.5,anthropic/claude-opus-4.6,qwen/qwen3-coder \
+  --tier lite \
+  --models openai/gpt-5.6-luna,x-ai/grok-4.5 \
   --generic-turns 72 \
   --include-pareto \
   --max-task-cost-usd 9 \
   --max-total-cost-usd 75 \
-  --output-dir runs/full-model-matrix-001
+  --output-dir "/tmp/pareto-lite-dry-$(date +%s)" \
+  --dry-run
 ```
 
 See [documentation](docs/README.md) for command details, artifact contracts, the catalog CLI, legacy Docker ladder notes, and development instructions.

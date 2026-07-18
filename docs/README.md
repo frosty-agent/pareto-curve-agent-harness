@@ -1,4 +1,4 @@
-# Documentation
+# Operating guide, experiment contract, and evidence
 
 ## Current path: owned Node policy study
 
@@ -25,7 +25,7 @@ node scripts/run-owned-node-suite.mjs \
   --include-pareto \
   --max-task-cost-usd 9 \
   --max-total-cost-usd 75 \
-  --output-dir /tmp/owned-node-lite-dry-run \
+  --output-dir "/tmp/owned-node-lite-dry-$(date +%s)" \
   --dry-run
 
 # Live run; OPENROUTER_API_KEY must be available in the environment
@@ -36,10 +36,10 @@ node scripts/run-owned-node-suite.mjs \
   --include-pareto \
   --max-task-cost-usd 9 \
   --max-total-cost-usd 75 \
-  --output-dir runs/full-model-matrix-001
+  --output-dir "/tmp/owned-node-full-$(date +%s)"
 ```
 
-Required suite arguments are `--tier`, `--models`, and `--output-dir`. Optional flags are `--include-pareto`, `--generic-turns`, `--max-task-cost-usd`, `--max-total-cost-usd`, `--tiers-manifest`, `--dry-run`, and `--resume`.
+Required suite arguments are `--tier`, `--models`, and `--output-dir`. Optional flags are `--include-pareto`, `--generic-turns`, `--max-task-cost-usd`, `--max-total-cost-usd`, `--tiers-manifest`, `--dry-run`, and `--resume`. `--resume` is valid only for an existing output directory whose stored scope, policies, turn limit, and caps exactly match the new invocation.
 
 The output directory contains:
 
