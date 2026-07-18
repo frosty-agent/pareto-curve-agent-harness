@@ -14,6 +14,12 @@ The current supported comparison path is the self-contained Node fixture suite. 
 - Pareto retains its frozen recorded nine-model order and permits up to eight turns per rung. It resets the workspace after each failed rung and provides bounded regression feedback to the next rung.
 - Every policy gets the same prompt, production-only patch tool, regression command, fresh workspace, and provider-reported cost rule.
 
+### Ladder execution contract
+
+The fixed-model policy keeps one model, one workspace, and one conversation for up to the configured turn limit (72 in the checked-in matrix). The Pareto policy instead starts at rung one of its immutable nine-model list and gives each rung up to eight turns.
+
+After a Pareto rung fails its exact regression, the runner records the attempt evidence, discards its candidate changes by hard-resetting to the baseline commit, and gives the next rung compact tail feedback from the failed regression. Only a passing regression with complete cost accounting accepts a patch; unavailable/malformed provider cost stops scoring rather than becoming zero cost. This reset-and-escalate loop is the key behavioral difference from a generic long-context harness.
+
 ### End-to-end suite runner
 
 ```bash
