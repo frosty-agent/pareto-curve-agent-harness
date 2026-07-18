@@ -1,67 +1,66 @@
-# Pareto Curve Agent Harness
+# Pareto Ladder Harness
 
-A small research harness for comparing **coding-agent policies** by deterministic task outcome and actual provider cost.
+A coding-task harness that starts with a cheaper model, evaluates its attempt, and escalates through an ordered model ladder only when the task is not accepted.
 
-The current study uses owned, dependency-free Node repair fixtures. It is **directional evidence**, not a public leaderboard or a claim about all software-engineering tasks.
+## What the harness does
 
-## The ladder is the product
+A caller supplies a task, an ordered ladder of worker models, a workspace implementation, and a **pluggable evaluator**. The evaluator can combine deterministic checks, a model judge, or both.
 
-This harness compares **policies**, not just model names. Both policies start from the same fixture baseline and receive the same prompt, bounded tools, production-only patch boundary, deterministic `node --test` regression, fresh workspace, and provider-cost accounting. The policy—not the task contract—is what changes.
+```text
+clean task workspace
+        │
+        ▼
+worker at rung 1 ──► evaluator ──accepted──► return accepted result
+        │
+     rejected
+        │
+        ▼
+snapshot evidence + reset workspace to baseline
+        │
+        ▼
+worker at rung 2 ──► evaluator ──accepted──► return accepted result
+        │
+       ...
+        ▼
+return exhausted / execution error / judge error
+```
 
-### Generic fixed-model harness
+The ladder does not assume that the first model can solve every task. It pays for a cheaper attempt first, preserves evidence about a rejected attempt, restores the original workspace, gives bounded feedback to the next rung, and stops as soon as an evaluator accepts an attempt.
 
-A generic harness gives one selected model a single continuous session of up to **72 model-response/tool-loop turns per task**. The model keeps its conversation context and any accepted workspace edits for that session. It either produces a passing regression, stops, hits a cap, or exhausts 72 turns. It does not change models or reset back to the original baseline mid-task.
+## How the ladder works
 
-### Frozen Pareto ladder
+For each rung, `ParetoTaskLadder`:
 
-The Pareto harness turns that one long attempt into a controlled escalation loop:
+1. gives the worker the task, a clean isolated workspace, and—after the first rung—the prior attempt's result, evaluator feedback, and snapshot reference;
+2. records the worker result;
+3. calls the configured `TaskJudge` evaluator;
+4. returns immediately when the evaluator marks the attempt successful;
+5. otherwise snapshots the rejected change and resets the workspace to its baseline before trying the next rung.
 
-1. It starts a clean workspace from the fixture baseline and dispatches the first model in the immutable nine-rung order.
-2. A rung can use the same bounded tools and up to **8 turns** to inspect, patch production source, and run the exact regression.
-3. If that regression passes and every provider call has valid `usage.cost`, the patch is accepted and the ladder stops.
-4. Otherwise, the candidate patch is rejected, the workspace is reset to the original baseline, and compact failing-test feedback is carried forward.
-5. The next model gets a fresh 8-turn attempt against that clean baseline. The process repeats until a rung resolves the task, cost accounting fails closed, a cap stops the run, or all nine rungs are exhausted.
+The ladder is ordered by the caller. A cost-aware caller normally puts lower-cost candidates first and more capable candidates later, but the harness preserves whatever explicit order it receives. It rejects duplicate model IDs and always cleans up the disposable workspace when the run ends.
 
-The ladder therefore has at most **9 × 8 = 72 turns per task**, matching the generic policy's maximum response envelope. It intentionally does **not** have the same trajectory: generic grows one model's context, while Pareto buys isolated retries, model selection, and resettable failure recovery. Treat the results as evidence about complete policies—not a pure model-quality ranking.
+## Pareto ladder vs. a generic harness
 
-## Cost study: evidence for the ladder
+| Generic harness | Pareto ladder harness |
+|---|---|
+| One worker model gets one continuous attempt. | Multiple worker models are tried in an explicit order. |
+| Context and workspace edits accumulate inside that attempt. | Every rejected rung is snapshotted, then the workspace resets to baseline. |
+| A failure consumes more turns from the same model. | A rejection can carry bounded feedback to a fresh attempt by the next model. |
+| The caller decides whether to retry externally. | Escalation, evidence capture, reset, and termination are part of the harness. |
 
-The latest full run evaluated 13 owned fixtures across four fixed models and the frozen Pareto policy. All 65 task-policy rows had complete provider-reported `usage.cost`. The cost table below is supporting evidence for the execution design above, not a claim that the listed prices or rankings generalize beyond this run.
+This is a **task-execution harness**, not a benchmark harness. The owned Node model matrix in this repository is only one way to exercise and validate its cost-aware escalation behavior.
+
+## Supporting cost evidence
+
+The checked-in 13-task owned-Node run is supporting evidence, not the product description. With the study's frozen nine-rung configuration, Pareto resolved 13/13 fixtures at $0.106386 in provider-reported cost; the complete comparison, inputs, and limitations are in the linked artifacts.
 
 ![Full-tier actual provider cost and resolution](reports/full-model-matrix-001/cost-chart.svg)
 
-| Policy | Resolved | Actual provider cost |
-|---|---:|---:|
-| GPT-5.6 Luna — one 72-turn session | 12 / 13 | $0.797856 |
-| Grok 4.5 — one 72-turn session | 13 / 13 | $1.368134 |
-| Claude Opus 4.6 — one 72-turn session | 13 / 13 | $5.971770 |
-| Qwen3 Coder — one 72-turn session | 6 / 13 | $1.164105 |
-| Frozen Pareto | 13 / 13 | $0.106386 |
-
-On this single owned-fixture run, Pareto matched the strongest fixed-model resolution result at the lowest actual cost. That is a policy result for this suite—not a general model ranking.
-
-The complete evidence is checked in:
-
 - [full report](reports/full-model-matrix-001/REPORT.md)
-- [cost chart](reports/full-model-matrix-001/cost-chart.svg)
-- [CSV rows](reports/full-model-matrix-001/results.csv)
-- [JSON rows](reports/full-model-matrix-001/results.json)
-- [hash-bound run manifest](reports/full-model-matrix-001/run-manifest.json)
+- [CSV results](reports/full-model-matrix-001/results.csv)
+- [JSON results](reports/full-model-matrix-001/results.json)
+- [run manifest](reports/full-model-matrix-001/run-manifest.json)
 
-## Validate or run the current suite
+## Use and implementation details
 
-The owned fixture tiers are `single` (1 task), `lite` (4 fast tasks), and `full` (13 tasks). Start with a no-cost validation run; the output directory must be new unless you use `--resume` with the exact same run manifest.
-
-```bash
-node scripts/run-owned-node-suite.mjs \
-  --tier lite \
-  --models openai/gpt-5.6-luna,x-ai/grok-4.5 \
-  --generic-turns 72 \
-  --include-pareto \
-  --max-task-cost-usd 9 \
-  --max-total-cost-usd 75 \
-  --output-dir "/tmp/pareto-lite-dry-$(date +%s)" \
-  --dry-run
-```
-
-See [documentation](docs/README.md) for command details, artifact contracts, the catalog CLI, legacy Docker ladder notes, and development instructions.
+See the [operating guide](docs/README.md) for the runtime interfaces, Docker runner, owned Node suite, artifact contract, catalog CLI, and development commands.

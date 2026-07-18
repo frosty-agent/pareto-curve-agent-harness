@@ -1,6 +1,14 @@
 # Operating guide, experiment contract, and evidence
 
-## Current path: owned Node policy study
+## Core runtime: `ParetoTaskLadder`
+
+`ParetoTaskLadder` is the task-execution primitive. Its constructor receives a `TaskWorker`, a `TaskJudge`, and an `AttemptWorkspace`. A run receives a task plus the caller's ordered model ladder.
+
+For each model, the runtime invokes the worker, sends the resulting attempt to the injected evaluator, and returns as soon as `JudgeResult.successful` is true. On rejection it snapshots the attempted change and resets the workspace before invoking the next model. The next worker receives the prior worker output, evaluator learnings, and snapshot reference. It returns `success`, `exhausted`, `execution_error`, or `judge_error`, and cleans the disposable workspace in every case.
+
+`TaskJudge` is pluggable. The repository includes an OpenRouter judge adapter, but callers can implement deterministic checks, a model judge, or a composite evaluator. The runtime selects the highest-intelligence model in the supplied ladder as judge context; an evaluator adapter may use or ignore that context according to its own contract.
+
+## Supporting validation: owned Node policy study
 
 The current supported comparison path is the self-contained Node fixture suite. It has no Docker, Python, SWE-bench, or external task runtime dependency.
 
